@@ -1,0 +1,70 @@
+# =====================================
+# 🔧 Node / npm
+# =====================================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Lockfiles alternativos
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# =====================================
+# ⚙️ TypeScript / Build
+# =====================================
+dist/
+build/
+*.tsbuildinfo
+
+# =====================================
+# 🧪 Testes / Cobertura
+# =====================================
+coverage/
+.jest-cache/
+.jest/
+*.lcov
+
+# =====================================
+# 🗄️ Prisma
+# =====================================
+# Bancos locais (como SQLite)
+*.db
+*.db-journal
+
+# Arquivos do Prisma Client (gerado automaticamente)
+# Se quiser garantir regeneração limpa, ignore o client compilado:
+prisma/generated/
+
+# =====================================
+# 🔐 Variáveis de ambiente
+# =====================================
+.env
+.env.test
+.env.local
+.env.development
+.env.production
+
+# (mas inclua um modelo!)
+# exemplo:
+# .env.example
+
+# =====================================
+# 🖥️ Sistema / IDE
+# =====================================
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# =====================================
+# 🚀 Outros opcionais
+# =====================================
+logs/
+*.log
+tmp/
+temp/
