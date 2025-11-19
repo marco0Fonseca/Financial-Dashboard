@@ -1,0 +1,43 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./financialDashboard.db"
+}
+
+model User {
+  id           String           @id @default(uuid())
+  name         String
+  email        String           @unique
+  password     String
+  
+  transactions Transaction[]
+}
+
+enum TransactionType {
+  COST
+  GAIN
+  INVESTMENT
+}
+
+model TransactionCategory {
+  id           Int       @id @default(autoincrement())
+  label        String
+  type         TransactionType
+
+  transactions Transaction[]
+}
+
+model Transaction {
+  id           Int       @id @default(autoincrement())
+  label        String
+  type         TransactionType
+
+  categoryId   Int
+  userId       String
+
+  category     TransactionCategory @relation(fields: [categoryId], references :[id])
+  user         User @relation(fields: [userId], references: [id])
+}
