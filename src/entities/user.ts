@@ -13,4 +13,8 @@ export class User{
         this.email = email;
         this._password = password; 
     }
+
+    get password() {
+        return this._password;
+    }
 }

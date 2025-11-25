@@ -4,7 +4,6 @@ generator client {
 
 datasource db {
   provider = "sqlite"
-  url      = "file:./financialDashboard.db"
 }
 
 model User {
@@ -13,6 +12,7 @@ model User {
   email        String           @unique
   password     String
   
+  transactionCategories TransactionCategory[]
   transactions Transaction[]
 }
 
@@ -28,16 +28,19 @@ model TransactionCategory {
   type         TransactionType
 
   transactions Transaction[]
+
+  userId       String
+  user         User      @relation(fields: [userId], references: [id])
 }
 
 model Transaction {
   id           Int       @id @default(autoincrement())
-  label        String
-  type         TransactionType
+  value        Float     
+  date         DateTime
 
   categoryId   Int
-  userId       String
-
   category     TransactionCategory @relation(fields: [categoryId], references :[id])
+
+  userId       String
   user         User @relation(fields: [userId], references: [id])
 }

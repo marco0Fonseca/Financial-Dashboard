@@ -5,13 +5,15 @@ enum TransactionType {
 }
 
 export class TransactionCategory {
-    public readonly id: string;
+    public readonly id: number;
     public label: string;
     public type: TransactionType;
+    public readonly userId: string;
 
-    constructor(id: string, label: string, type: TransactionType) {
+    constructor(id: number, label: string, type: TransactionType, userId : string) {
         this.id = id;
         this.label = label;
         this.type = type;
+        this.userId = userId;
     }
 }
