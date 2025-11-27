@@ -3,7 +3,7 @@ export class User{
     public readonly id : string;
     public name : string;
     public email : string;
-    private _password : string;
+    public password : string;
 
     constructor(
         id : string, name : string, email : string, password : string){
@@ -11,10 +11,6 @@ export class User{
         this.id = id;
         this.name = name;
         this.email = email;
-        this._password = password; 
-    }
-
-    get password() {
-        return this._password;
+        this.password = password; 
     }
 }
