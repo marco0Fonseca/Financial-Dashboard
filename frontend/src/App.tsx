@@ -1,11 +1,14 @@
 
 import React, { useState } from 'react';
-import './App.css';
 import Login from './components/Login.tsx';
 import PurchaseForm from './components/PurchaseForm.tsx';
 import PurchaseList from './components/PurchaseList.tsx';
 import Dashboard from './components/Dashboard.tsx';
 import Sidebar from './components/Sidebar.tsx';
+import Dividas from './components/Dividas.tsx';
+import Investimentos from './components/Investimentos.tsx';
+import './global.css'
+
 
 export interface Purchase {
   description: string;
@@ -59,10 +62,10 @@ function App() {
       );
       break;
     case 'investimentos':
-      content = <h2>Investimentos - Em desenvolvimento</h2>;
+      content = <Investimentos />;
       break;
     case 'dividas':
-      content = <h2>Dívidas - Em desenvolvimento</h2>;
+      content = <Dividas />;
       break;
     default:
       content = null;
