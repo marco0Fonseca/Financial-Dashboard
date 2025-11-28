@@ -1,0 +1,146 @@
+.purchase-form {
+  background: linear-gradient(180deg, #ffffff 0%, #fbfbff 100%);
+  border-radius: 12px;
+  padding: 18px;
+  box-shadow: 0 6px 18px rgba(23, 32, 88, 0.06);
+  max-width: 880px;
+  margin: 12px auto;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+  color: #12222b;
+}
+
+.pf-header h2 {
+  margin: 0;
+  font-size: 1.25rem;
+}
+
+.pf-sub {
+  margin: 4px 0 12px 0;
+  color: #6b7280;
+  font-size: 0.9rem;
+}
+
+.pf-type {
+  display: flex;
+  gap: 12px;
+  border: none;
+  margin-bottom: 12px;
+  padding: 0;
+}
+
+.pf-type legend {
+  display: none;
+}
+
+.pf-option {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: #f3f4f6;
+  cursor: pointer;
+  font-weight: 600;
+  color: #374151;
+}
+
+.pf-option input[type="radio"] {
+  accent-color: #1abc9c;
+}
+
+.pf-option.active {
+  background: #1abc9c;
+  color: #fff;
+  box-shadow: 0 6px 18px rgba(26, 188, 156, 0.12);
+}
+
+.pf-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  align-items: end;
+}
+
+.pf-field {
+  display: flex;
+  flex-direction: column;
+}
+
+.pf-label {
+  font-size: 0.85rem;
+  color: #374151;
+  margin-bottom: 6px;
+}
+
+.pf-field input[type="text"],
+.pf-field input[type="number"] {
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid #e6e9ef;
+  background: #fff;
+  outline: none;
+  transition: box-shadow 0.15s ease, border-color 0.15s ease;
+}
+
+.pf-field input:focus {
+  box-shadow: 0 6px 18px rgba(26,188,156,0.18);
+  border-color: #1abc9c;
+}
+
+.pf-recurring {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.pf-label-inline {
+  font-size: 0.95rem;
+  color: #374151;
+}
+
+.pf-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  margin-top: 14px;
+}
+
+.btn {
+  padding: 10px 16px;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.btn.primary {
+  background: #1abc9c; /* flat primary color */
+  color: #ffffff;
+  box-shadow: none;
+}
+
+.btn.outline {
+  background: transparent;
+  color: #1abc9c;
+  border: 1px solid rgba(26, 188, 156, 0.18);
+}
+
+.pf-recurring input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: #1abc9c;
+}
+
+@media (max-width: 800px) {
+  .pf-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .pf-actions {
+    justify-content: stretch;
+  }
+
+  .btn {
+    width: 100%;
+  }
+}

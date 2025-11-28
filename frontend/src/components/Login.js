@@ -42,41 +42,58 @@ function Login({ onLogin }) {
           height: 100vh;
           justify-content: center;
           align-items: center;
-          background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
-          color: white;
-          font-family: Arial, sans-serif;
+          background: linear-gradient(180deg, #ffffff 0%, #fbfbff 100%);
+          color: #12222b;
+          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
         }
         .login-form {
-          background: rgba(255, 255, 255, 0.15);
-          padding: 2rem;
-          border-radius: 8px;
-          box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
-          width: 320px;
+          background: #fff;
+          padding: 2rem 2.5rem 2rem 2.5rem;
+          border-radius: 14px;
+          box-shadow: 0 6px 18px rgba(23, 32, 88, 0.10);
+          width: 340px;
           display: flex;
           flex-direction: column;
+          align-items: stretch;
+        }
+        .login-form h2 {
+          margin-bottom: 1.5rem;
+          color: #1abc9c;
+          text-align: center;
         }
         input {
-          margin-bottom: 1rem;
-          padding: 0.5rem;
-          border-radius: 4px;
-          border: none;
+          margin-bottom: 1.2rem;
+          padding: 0.7rem 1rem;
+          border-radius: 8px;
+          border: 1px solid #e6e9ef;
           font-size: 1rem;
+          background: #f8fafc;
+          color: #12222b;
+          transition: border-color 0.15s, box-shadow 0.15s;
+        }
+        input:focus {
+          border-color: #1abc9c;
+          box-shadow: 0 0 0 2px rgba(26,188,156,0.10);
         }
         button {
-          background-color: #4caf50;
-          color: white;
-          font-weight: bold;
+          background: #1abc9c;
+          color: #fff;
+          font-weight: 600;
           border: none;
-          padding: 0.75rem;
+          padding: 0.85rem 0;
           cursor: pointer;
-          border-radius: 4px;
-          font-size: 1rem;
+          border-radius: 8px;
+          font-size: 1.08rem;
+          box-shadow: none;
+          transition: background 0.15s;
         }
         button:hover {
-          background-color: #45a049;
+          background: #17a689;
         }
         label {
           margin-bottom: 0.25rem;
+          color: #374151;
+          font-size: 0.98rem;
         }
       `}</style>
     </div>
@@ -84,4 +101,3 @@ function Login({ onLogin }) {
 }
 
 export default Login;
-

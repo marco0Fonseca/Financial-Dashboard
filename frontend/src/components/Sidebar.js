@@ -3,7 +3,7 @@ import React from 'react';
 function Sidebar({ selected, onSelect }) {
   const menuItems = [
     { key: 'overview', label: 'Overview', icon: 'overview.png' },
-    { key: 'mensais', label: 'Gastos Mensais', icon: 'mensais.png' },
+    { key: 'mensais', label: 'Movimentações', icon: 'mensais.png' },
     { key: 'investimentos', label: 'Investimentos', icon: 'investimentos.png' },
     { key: 'dividas', label: 'Dívidas', icon: 'dividas.png' },
   ];
@@ -77,4 +77,3 @@ function Sidebar({ selected, onSelect }) {
 }
 
 export default Sidebar;
-

@@ -35,9 +35,14 @@ function App() {
     case 'mensais':
       content = (
         <>
-          <h2>Gastos Mensais</h2>
+          <h2>Movimentações Mensais</h2>
           <PurchaseForm onAddPurchase={addPurchase} />
-          <PurchaseList purchases={purchases} />
+          <PurchaseList
+            purchases={purchases}
+            onDelete={(index) => {
+              setPurchases((prev) => prev.filter((_, i) => i !== index));
+            }}
+          />
         </>
       );
       break;
@@ -45,7 +50,7 @@ function App() {
       content = <h2>Investimentos - Em desenvolvimento</h2>;
       break;
     case 'dividas':
-      content = <h2>Dívidas - Em desenvolvimento</h2>;
+      content = <h2>Dídvidas - Em desenvolvimento</h2>;
       break;
     default:
       content = null;
@@ -79,4 +84,3 @@ function App() {
 }
 
 export default App;
-
