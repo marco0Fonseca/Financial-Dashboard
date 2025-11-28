@@ -1,20 +1,32 @@
+
 import React, { useState } from 'react';
-import Login from './components/Login';
-import PurchaseForm from './components/PurchaseForm';
-import PurchaseList from './components/PurchaseList';
-import Dashboard from './components/Dashboard';
-import Sidebar from './components/Sidebar';
+import './App.css';
+import Login from './components/Login.tsx';
+import PurchaseForm from './components/PurchaseForm.tsx';
+import PurchaseList from './components/PurchaseList.tsx';
+import Dashboard from './components/Dashboard.tsx';
+import Sidebar from './components/Sidebar.tsx';
+
+export interface Purchase {
+  description: string;
+  amount: string;
+  category: string;
+  isRecurring: boolean;
+  type: 'gasto' | 'ganho';
+}
+
+type Page = 'overview' | 'mensais' | 'investimentos' | 'dividas';
 
 function App() {
-  const [loggedInUser, setLoggedInUser] = useState(null);
-  const [selectedPage, setSelectedPage] = useState('overview');
-  const [purchases, setPurchases] = useState([]);
+  const [loggedInUser, setLoggedInUser] = useState<string | null>(null);
+  const [selectedPage, setSelectedPage] = useState<Page>('overview');
+  const [purchases, setPurchases] = useState<Purchase[]>([]);
 
-  const addPurchase = (purchase) => {
+  const addPurchase = (purchase: Purchase) => {
     setPurchases([...purchases, purchase]);
   };
 
-  const handleLogin = (email) => {
+  const handleLogin = (email: string) => {
     setLoggedInUser(email);
   };
 
@@ -22,7 +34,7 @@ function App() {
     return <Login onLogin={handleLogin} />;
   }
 
-  let content;
+  let content: React.ReactNode;
   switch (selectedPage) {
     case 'overview':
       content = (
@@ -39,7 +51,7 @@ function App() {
           <PurchaseForm onAddPurchase={addPurchase} />
           <PurchaseList
             purchases={purchases}
-            onDelete={(index) => {
+            onDelete={(index: number) => {
               setPurchases((prev) => prev.filter((_, i) => i !== index));
             }}
           />
@@ -50,7 +62,7 @@ function App() {
       content = <h2>Investimentos - Em desenvolvimento</h2>;
       break;
     case 'dividas':
-      content = <h2>Dídvidas - Em desenvolvimento</h2>;
+      content = <h2>Dívidas - Em desenvolvimento</h2>;
       break;
     default:
       content = null;
@@ -65,20 +77,6 @@ function App() {
         {content}
       </main>
 
-      <style jsx>{`
-        .app-container {
-          display: flex;
-          height: 100vh;
-          background: #ecf0f1;
-          color: #2c3e50;
-          font-family: Arial, sans-serif;
-        }
-        .app-content {
-          flex-grow: 1;
-          padding: 20px;
-          overflow-y: auto;
-        }
-      `}</style>
     </div>
   );
 }

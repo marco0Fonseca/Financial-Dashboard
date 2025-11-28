@@ -1,14 +1,20 @@
 import React from 'react';
+import { Purchase } from '../App';
 
-function PurchaseList({ purchases, onDelete }) {
+interface PurchaseListProps {
+  purchases: Purchase[];
+  onDelete?: (index: number) => void;
+}
+
+const PurchaseList: React.FC<PurchaseListProps> = ({ purchases, onDelete }: PurchaseListProps) => {
   return (
     <div>
       <h2>Histórico</h2>
       {purchases.length === 0 ? (
-        <p>Nenhuma compra registrada.</p>
+        <p>Nenhuma movimentação registrada.</p>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-          {purchases.map((p, index) => (
+          {purchases.map((p: Purchase, index: number) => (
             <div
               key={index}
               style={{
@@ -74,8 +80,8 @@ function PurchaseList({ purchases, onDelete }) {
                 title="Excluir"
                 aria-label="Excluir compra"
                 type="button"
-                onMouseOver={e => e.currentTarget.style.background = 'rgba(231,76,60,0.08)'}
-                onMouseOut={e => e.currentTarget.style.background = 'none'}
+                onMouseOver={e => (e.currentTarget.style.background = 'rgba(231,76,60,0.08)')}
+                onMouseOut={e => (e.currentTarget.style.background = 'none')}
               >
                 &#10005;
               </button>
@@ -85,6 +91,6 @@ function PurchaseList({ purchases, onDelete }) {
       )}
     </div>
   );
-}
+};
 
 export default PurchaseList;

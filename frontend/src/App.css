@@ -1,3 +1,17 @@
+/* App container and content styles moved from App.tsx */
+.app-container {
+  display: flex;
+  height: 100vh;
+  background: #ecf0f1;
+  color: #2c3e50;
+  font-family: Arial, sans-serif;
+}
+
+.app-content {
+  flex-grow: 1;
+  padding: 20px;
+  overflow-y: auto;
+}
 .App {
   text-align: center;
 }
