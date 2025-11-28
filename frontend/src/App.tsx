@@ -47,7 +47,7 @@ function App() {
     case 'mensais':
       content = (
         <>
-          <h2>Movimentações Mensais</h2>
+          <h2>Movimentações</h2>
           <PurchaseForm onAddPurchase={addPurchase} />
           <PurchaseList
             purchases={purchases}
@@ -72,8 +72,6 @@ function App() {
     <div className="app-container">
       <Sidebar selected={selectedPage} onSelect={setSelectedPage} />
       <main className="app-content">
-        <h1>Controle de Finanças Pessoais</h1>
-        <p>Bem-vindo, {loggedInUser}</p>
         {content}
       </main>
 
