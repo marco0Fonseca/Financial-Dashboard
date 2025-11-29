@@ -25,6 +25,7 @@ function PurchaseForm({ onAddPurchase }: PurchaseFormProps) {
   const [type, setType] = useState('gasto');
   const [useCurrentDate, setUseCurrentDate] = useState(true);
   const [date, setDate] = useState(getTodayISO());
+  const [displayValue, setDisplayValue] = useState(formatDateDisplay(date));
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -121,15 +122,14 @@ function PurchaseForm({ onAddPurchase }: PurchaseFormProps) {
           ) : (
             <input
               type="text"
-              value={formatDateDisplay(date)}
+              value={displayValue}
               onChange={(e) => {
-                // Accept only DD/MM/AAAA and convert to ISO
                 const val = e.target.value.replace(/\s/g, '');
+                setDisplayValue(e.target.value); // Always update display
+                
                 const match = val.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
                 if (match) {
                   setDate(`${match[3]}-${match[2]}-${match[1]}`);
-                } else {
-                  setDate(date); // ignore invalid
                 }
               }}
               className="pf-date-field"
