@@ -1,17 +1,16 @@
-enum TransactionType {
+export enum TransactionTypeClass {
   COST = "COST",
   GAIN = "GAIN",
   INVESTMENT = "INVESTMENT"
 }
 
 export class TransactionCategory {
-    public readonly id: number;
+    public id: number = -1;
     public label: string;
-    public type: TransactionType;
+    public type: TransactionTypeClass;
     public readonly userId: string;
 
-    constructor(id: number, label: string, type: TransactionType, userId : string) {
-        this.id = id;
+    constructor(label: string, type: TransactionTypeClass, userId : string) {
         this.label = label;
         this.type = type;
         this.userId = userId;

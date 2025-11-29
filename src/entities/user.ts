@@ -1,14 +1,11 @@
 export class User{
 
-    public readonly id : string;
+    public id : string = '';
     public name : string;
     public email : string;
-    public password : string;
+    public password? : string; // Only used during creation
 
-    constructor(
-        id : string, name : string, email : string, password : string){
-            
-        this.id = id;
+    constructor(name : string, email : string, password? : string){
         this.name = name;
         this.email = email;
         this.password = password; 

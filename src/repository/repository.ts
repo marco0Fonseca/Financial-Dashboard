@@ -1,118 +1,154 @@
 import { PrismaClient, TransactionType } from '@prisma/client'
-import bcrypt from "bcryptjs";
 import { User } from '../entities/user';
-import { TransactionCategory } from '../entities/transactions/transactionCategory';
+import { TransactionCategory, TransactionTypeClass } from '../entities/transactions/transactionCategory';
 import { Transaction } from '../entities/transactions/transaction';
+import { hashPassword } from '../server/auth';
 
 const prisma = new PrismaClient();
 
 export class UserRepository {
-  async create(user : User){
+  async create(user : User) : Promise<User>{
+    const hashedPassword  = user.password ? await hashPassword(user.password) : undefined;
 
-    const userOnDb = await this.findUserByEmail(user.email);
-
-    if (userOnDb) {
-      throw new Error("Email already registered!");
-    }
-
-    const hashPassword : string = await bcrypt.hash(user.password, 10);
-
-    return prisma.user.create({
-      data:{ name : user.name, 
+    const userData = await prisma.user.create({
+      data :{
+        name : user.name,
         email : user.email,
-        password : hashPassword 
-       }
-    })
+        password : hashedPassword!,
+      },
+      include : {
+        transactionCategories : true,
+        transactions : true
+      }
+    });
+
+    user.id = userData.id;
+    user.password = undefined;
+
+    return user;
   }
 
   async findUserById(id: string) {
-    return prisma.user.findUnique({
+    const userData = await prisma.user.findUnique({
       where: { id: id }
     })
-  }
 
-  async findUserByName(name: string) {
-    return prisma.user.findMany({
-      where: { name: name }
-    })
+    if(!userData) return null;
+
+    const user = new User (userData.name, userData.email);
+    user.id = userData.id;
+
+    return user;
   }
 
   async findUserByEmail(email: string) {
-    return prisma.user.findUnique({
+    const userData = await prisma.user.findUnique({
       where: { email: email }
     })
+
+    if(!userData) return null;
+
+    const user = new User (userData.name, userData.email);
+    user.id = userData.id;
+
+    return user;
+  }
+
+  async findUserByEmailWithPassword(email: string) {
+    const userData = await prisma.user.findUnique({
+      where: { email: email }
+    })
+
+    if(!userData) return {user : null, password: null};
+
+    const user = new User (userData.name, userData.email);
+    user.id = userData.id;
+
+    return { user, password: userData.password };
   }
 
   async updateName(id: string, newName: string) {
     return prisma.user.update({
-      where: { id },
+      where: { id : id },
       data: { name: newName }
     });
   }
 
   async updateEmail(id: string, newEmail: string) {
     return prisma.user.update({
-      where: { id },
+      where: { id : id },
       data: { email: newEmail }
     });
   }
 
   async updatePassword(id: string, newPassword: string) {
-    const hashPassword : string = await bcrypt.hash(newPassword, 10);
+    const hashedPassword  = newPassword ? await hashPassword(newPassword) : undefined;
 
     return prisma.user.update({
-      where: { id },
-      data: { password: hashPassword }
+      where: { id : id },
+      data: { password: hashedPassword }
     });
+  }
+
+  async delete(id : string){
+    return prisma.user.delete({
+      where: { id }
+    })
   }
 }
 
 export class TransactionCategoryRepository {
-  async create(category : TransactionCategory, user : User){
-    const normalizedLabel = category.label.toLowerCase().trim();
-    const categories = await this.findCategories(normalizedLabel, category.type, user.id);
-
-    if(categories.length > 0) {
-      throw new Error("Category already registered");
-    }
-
-    return await this.createByPass(category,user);
-  }
-
-  async createByPass(category : TransactionCategory, user : User){
-    const normalizedLabel = category.label.toLowerCase().trim();
-
-    return prisma.transactionCategory.create({
+  async create(category : TransactionCategory){
+    const categoryData = await prisma.transactionCategory.create({
       data: {
-        label : normalizedLabel, 
+        label : category.label, 
         type : category.type,
-        userId : user.id
+        userId : category.userId
       }
     })
+
+    category.id = categoryData.id;
+
+    return category;
   }
 
   async findCategoryById(id: number) {
-    return prisma.transactionCategory.findUnique({
+    const categoryData = await prisma.transactionCategory.findUnique({
       where: { id: id }
     })
+
+    if(!categoryData) return null;
+
+    const type = TransactionTypeClass[categoryData.type as keyof typeof TransactionTypeClass];
+
+    const category = new TransactionCategory(
+      categoryData.label,
+      type,
+      categoryData.userId
+    );
+    category.id = categoryData.id;
+
+    return category;
   }
   
-  async findCategories(label: string, type : TransactionType, userId : string) {
-    const normalizedLabel = label.toLowerCase().trim();
-
-    return prisma.transactionCategory.findMany({
+  async findUserCategories(userId : string) {
+    const categoryData = await prisma.transactionCategory.findMany({
       where: {
         userId : userId,
-        type : type, 
-        label: normalizedLabel
        }
     })
-  }
 
-  async findUserCategories(userId: string) {
-    return prisma.transactionCategory.findMany({
-      where: { userId }
-    })
+    if(!categoryData || categoryData.length === 0) return null;
+
+    const categories : TransactionCategory[] = [];
+
+    categoryData.forEach(cd =>{
+      const typeClass =  TransactionTypeClass[cd.type as keyof typeof TransactionTypeClass];
+      const category = new TransactionCategory(cd.label,typeClass,cd.userId);
+      categories.push(category);
+    });
+
+    return categories;
   }
 
   async delete(id : number){
@@ -138,37 +174,69 @@ export class TransactionCategoryRepository {
 
 export class TransactionRepository {
   async create(transaction : Transaction, user : User){
-
-    const transactionOccurrency = await this.findTransactionOccurency(transaction, user.id);
-
-    if(transactionOccurrency.length > 0){
-      throw new Error("Another transaction was found!");
-    }
-
-    return prisma.transaction.create({
+    const transactionData = await prisma.transaction.create({
       data: {
         value : transaction.value, 
         date : transaction.date,
+        recurrence : transaction.recurrence,
         categoryId : transaction.category.id,
         userId : user.id 
       }
     })
+
+    transaction.id = transactionData.id
+
+    return transaction;
   }
 
   async findTransactionById(id: number) {
-    return prisma.transaction.findUnique({
+    const transactionData = await prisma.transaction.findUnique({
       where: { id: id }
     })
+
+    if(!transactionData) return null;
+
+    const categoryRepo = new TransactionCategoryRepository;
+    const category = await categoryRepo.findCategoryById(transactionData.categoryId);
+
+    const transaction = new Transaction(
+      category!,
+      transactionData.value,
+      transactionData.date,
+      transactionData.recurrence
+    );
+
+    return transaction;
   }
 
   async findUserTransactions(userId: string) {
-    return prisma.transaction.findMany({
+    const transactionData = await prisma.transaction.findMany({
       where: { userId }
-    })
+    });
+
+    if(!transactionData || transactionData.length === 0) return null;
+
+    const transactions : Transaction[] = [];
+    const categoryRepo = new TransactionCategoryRepository;
+
+    for (const td of transactionData) {
+      const category = await categoryRepo.findCategoryById(td.categoryId);
+
+      const transaction = new Transaction(
+        category!,
+        td.value,
+        td.date,
+        td.recurrence
+      );
+
+      transactions.push(transaction);
+    }
+
+    return transactions;
   }
 
   async findTransactionsByDate(begin: Date, until: Date ) {
-    return prisma.transaction.findMany({
+    const transactionData = await prisma.transaction.findMany({
       where: {
         date: {
           gt: begin,
@@ -176,10 +244,30 @@ export class TransactionRepository {
         }
       }
     });
+
+    if(!transactionData || transactionData.length === 0) return null;
+
+    const transactions : Transaction[] = [];
+    const categoryRepo = new TransactionCategoryRepository;
+
+    for (const td of transactionData) {
+      const category = await categoryRepo.findCategoryById(td.categoryId);
+
+      const transaction = new Transaction(
+        category!,
+        td.value,
+        td.date,
+        td.recurrence
+      );
+
+      transactions.push(transaction);
+    }
+
+    return transactions;
   }
 
   async findTransactionOccurency(transaction : Transaction, userId : string) {
-    return prisma.transaction.findMany({
+    const transactionData = await prisma.transaction.findMany({
       where: {
         userId: userId,
         date : transaction.date,
@@ -187,6 +275,26 @@ export class TransactionRepository {
         value : transaction.value
       }
     });
+
+     if(!transactionData || transactionData.length === 0) return null;
+
+    const transactions : Transaction[] = [];
+    const categoryRepo = new TransactionCategoryRepository;
+
+    for (const td of transactionData) {
+      const category = await categoryRepo.findCategoryById(td.categoryId);
+
+      const transaction = new Transaction(
+        category!,
+        td.value,
+        td.date,
+        td.recurrence
+      );
+
+      transactions.push(transaction);
+    }
+
+    return transactions;
   }
 
   async delete(id : number){

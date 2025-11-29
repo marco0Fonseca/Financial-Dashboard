@@ -37,6 +37,7 @@ model Transaction {
   id           Int       @id @default(autoincrement())
   value        Float     
   date         DateTime
+  recurrence   Boolean
 
   categoryId   Int
   category     TransactionCategory @relation(fields: [categoryId], references :[id])
