@@ -1,27 +1,48 @@
 import React, { useState } from 'react';
 import './PurchaseForm.css';
 
-function PurchaseForm({ onAddPurchase }) {
+
+function getTodayISO() {
+  const today = new Date();
+  return today.toISOString().slice(0, 10);
+}
+
+function formatDateDisplay(iso: string) {
+  if (!iso) return '';
+  const [yyyy, mm, dd] = iso.split('-');
+  return `${dd} / ${mm} / ${yyyy}`;
+}
+
+interface PurchaseFormProps {
+  onAddPurchase: (purchase: any) => void;
+}
+
+function PurchaseForm({ onAddPurchase }: PurchaseFormProps) {
   const [description, setDescription] = useState('');
   const [amount, setAmount] = useState('');
   const [category, setCategory] = useState('');
   const [isRecurring, setIsRecurring] = useState(false);
   const [type, setType] = useState('gasto');
+  const [useCurrentDate, setUseCurrentDate] = useState(true);
+  const [date, setDate] = useState(getTodayISO());
 
-  const handleSubmit = (event) => {
+  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    onAddPurchase({ description, amount, category, isRecurring, type });
+    onAddPurchase({ description, amount, category, isRecurring, type, date });
     setDescription('');
     setAmount('');
     setCategory('');
     setIsRecurring(false);
+    setType('gasto');
+    setUseCurrentDate(true);
+    setDate(getTodayISO());
   };
 
   return (
     <form className="purchase-form" onSubmit={handleSubmit}>
       <div className="pf-header">
-        <h2>Movimentações</h2>
-        <p className="pf-sub">Registre despesas e ganhos rapidamente</p>
+        <h2>Registrar</h2>
+        <p className="pf-sub"></p>
       </div>
 
       <fieldset className="pf-type" aria-label="Tipo de movimentação">
@@ -84,6 +105,50 @@ function PurchaseForm({ onAddPurchase }) {
             required
             placeholder="Ex: Alimentação"
           />
+        </label>
+
+        {/* Data field to the right of Categoria */}
+        <label className="pf-field">
+          <span className="pf-label">Data</span>
+          {useCurrentDate ? (
+            <input
+              type="text"
+              value={formatDateDisplay(getTodayISO())}
+              disabled
+              style={{ color: '#888', background: '#f3f3f3' }}
+              className="pf-date-field"
+            />
+          ) : (
+            <input
+              type="text"
+              value={formatDateDisplay(date)}
+              onChange={(e) => {
+                // Accept only DD/MM/AAAA and convert to ISO
+                const val = e.target.value.replace(/\s/g, '');
+                const match = val.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+                if (match) {
+                  setDate(`${match[3]}-${match[2]}-${match[1]}`);
+                } else {
+                  setDate(date); // ignore invalid
+                }
+              }}
+              className="pf-date-field"
+              placeholder="DD / MM / AAAA"
+              maxLength={14}
+            />
+          )}
+          <label style={{ display: 'block', marginTop: 4, fontWeight: 400 }}>
+            <input
+              type="checkbox"
+              checked={useCurrentDate}
+              onChange={(e) => {
+                setUseCurrentDate(e.target.checked);
+                if (e.target.checked) setDate(getTodayISO());
+              }}
+              style={{ marginRight: 6 }}
+            />
+            Usar data atual
+          </label>
         </label>
 
         <div className="pf-field">

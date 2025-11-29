@@ -38,7 +38,7 @@ function Dashboard({ purchases }) {
   }
 
   return (
-    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '40px', justifyContent: 'center' }}>
+    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '40px' }}>
       <div>
         <h3>Gastos Gerais (recorrentes agrupados)</h3>
         <PieChart width={340} height={300}>
@@ -48,7 +48,7 @@ function Dashboard({ purchases }) {
             cx="50%"
             cy="50%"
             outerRadius={100}
-            label={(entry) => `${entry.name}: R$${entry.value.toFixed(2)}`}
+            labelLine={false}
           >
             {pie1.map((entry, index) => (
               <Cell key={`cell1-${index}`} fill={COLORS[index % COLORS.length]} />
