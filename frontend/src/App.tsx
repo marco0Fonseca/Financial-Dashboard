@@ -78,7 +78,7 @@ function App() {
   return (
     <>
       {/* Cabeçalho aparece sempre que o usuário está logado */}
-      <Header onLogout={handleLogout} />
+      <Header onLogout={handleLogout} user={loggedInUser} />
       <div className="app-container" style={{ paddingTop: 56 }}>
         <Sidebar selected={selectedPage} onSelect={setSelectedPage} />
         <main className="app-content">
