@@ -82,8 +82,6 @@ function App() {
       <div className="app-container" style={{ paddingTop: 56 }}>
         <Sidebar selected={selectedPage} onSelect={setSelectedPage} />
         <main className="app-content">
-          <h1>Controle de Finanças Pessoais</h1>
-          <p>Bem-vindo, {loggedInUser}</p>
           {content}
         </main>
       </div>

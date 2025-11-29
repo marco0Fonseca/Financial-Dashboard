@@ -183,7 +183,7 @@ const styles = {
   formCard: { background: '#fff', padding: '20px', borderRadius: '10px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)', marginBottom: '30px' },
   formRow: { display: 'flex', gap: '10px', flexWrap: 'wrap' as 'wrap', marginTop: '10px' },
   input: { padding: '12px', borderRadius: '6px', border: '1px solid #ddd', fontSize: '14px' },
-  btnAdd: { padding: '12px 25px', background: '#2c3e50', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' as 'bold' },
+  btnAdd: { padding: '12px 25px', background: '#1abc9c', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' as 'bold' },
   grid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '25px' },
   card: { background: '#fff', padding: '20px', borderRadius: '12px', boxShadow: '0 4px 15px rgba(0,0,0,0.05)', display: 'flex', flexDirection: 'column' as 'column', justifyContent: 'space-between' },
   cardHeader: { display: 'flex', justifyContent: 'space-between', marginBottom: '15px', borderBottom: '1px solid #f0f0f0', paddingBottom: '10px' },

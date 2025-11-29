@@ -152,7 +152,7 @@ const styles = {
   form: { display: 'flex', flexDirection: 'column' as 'column', gap: '15px' },
   input: { padding: '10px', borderRadius: '5px', border: '1px solid #ddd', width: '100%', boxSizing: 'border-box' as 'border-box' },
   select: { padding: '10px', borderRadius: '5px', border: '1px solid #ddd', width: '100%' },
-  button: { padding: '12px', background: '#27ae60', color: '#fff', border: 'none', borderRadius: '5px', cursor: 'pointer', fontWeight: 'bold' as 'bold' },
+  button: { padding: '12px', background: '#1abc9c', color: '#fff', border: 'none', borderRadius: '5px', cursor: 'pointer', fontWeight: 'bold' as 'bold' },
   listContainer: { background: '#fff', padding: '20px', borderRadius: '8px', boxShadow: '0 2px 5px rgba(0,0,0,0.05)' },
   table: { width: '100%', borderCollapse: 'collapse' as 'collapse' },
   row: { borderBottom: '1px solid #eee', height: '40px' },
