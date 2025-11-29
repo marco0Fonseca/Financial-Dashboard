@@ -36,6 +36,7 @@ function App() {
   const handleLogout = () => {
     setLoggedInUser(null);
   };
+  
 
   if (!loggedInUser) {
     return <Login onLogin={handleLogin} />;
@@ -77,13 +78,11 @@ function App() {
 
   return (
     <>
-      {/* Cabeçalho aparece sempre que o usuário está logado */}
-      <Header onLogout={handleLogout} />
+      <Header onLogout={handleLogout} user={loggedInUser} />
       <div className="app-container" style={{ paddingTop: 56 }}>
         <Sidebar selected={selectedPage} onSelect={setSelectedPage} />
         <main className="app-content">
           <h1>Controle de Finanças Pessoais</h1>
-          <p>Bem-vindo, {loggedInUser}</p>
           {content}
         </main>
       </div>

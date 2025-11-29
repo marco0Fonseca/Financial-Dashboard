@@ -31,14 +31,27 @@ const buttonStyle: React.CSSProperties = {
   fontWeight: 600,
 };
 
-function Header({ onLogout }: { onLogout: () => void }) {
+
+interface HeaderProps {
+  onLogout: () => void;
+  user: string | null; 
+}
+
+function Header({ onLogout, user }: HeaderProps) {
   return (
     <header style={headerStyle}>
       <div style={{ display: 'flex', alignItems: 'center' }}>
         <img src="/appicon.png" alt="App Icon" style={iconStyle} />
-        <span style={{ color: '#fff', fontWeight: 700, fontSize: 20 }}>Financial Dashboard </span>
+        <span style={{ color: '#fff', fontWeight: 700, fontSize: 20 }}>Financial Dashboard</span>
       </div>
-      <button style={buttonStyle} onClick={onLogout}>Logout</button>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+        {user && (
+          <span style={{ color: '#ecf0f1', fontSize: '16px', fontWeight: 500 }}>
+            Olá, {user.split('@')[0]}
+          </span>
+        )}
+        <button style={buttonStyle} onClick={onLogout}>Logout</button>
+      </div>
     </header>
   );
 }
