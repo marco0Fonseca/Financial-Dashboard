@@ -31,6 +31,11 @@ const buttonStyle: React.CSSProperties = {
   fontWeight: 600,
 };
 
+interface HeaderProps {
+  onLogout: () => void;
+  user: string | null; 
+}
+
 function Header({ onLogout, user }: HeaderProps) {
   return (
     <header style={headerStyle}>
