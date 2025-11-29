@@ -1,6 +1,15 @@
 import React from 'react';
 import { Purchase } from '../App';
 
+// Helper to format date as DD / MM / AAAA
+export function formatDateDisplay(iso?: string) {
+  if (!iso) return '';
+  const [yyyy, mm, dd] = iso.split('-');
+  return `${dd} / ${mm} / ${yyyy}`;
+}
+
+
+
 interface PurchaseListProps {
   purchases: Purchase[];
   onDelete?: (index: number) => void;
@@ -55,6 +64,11 @@ const PurchaseList: React.FC<PurchaseListProps> = ({ purchases, onDelete }: Purc
               {/* Descrição */}
               <div style={{ flexGrow: 1, paddingRight: '20px', textAlign: 'left' }}>
                 {p.description}
+              </div>
+
+              {/* Data */}
+              <div style={{ flexBasis: '120px', fontStyle: 'italic', color: '#555', textAlign: 'left' }}>
+                {formatDateDisplay(p.date)}
               </div>
 
               {/* Categoria */}

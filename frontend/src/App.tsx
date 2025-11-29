@@ -16,6 +16,7 @@ export interface Purchase {
   category: string;
   isRecurring: boolean;
   type: 'gasto' | 'ganho';
+  date?: string;
 }
 
 type Page = 'overview' | 'mensais' | 'investimentos' | 'dividas';
