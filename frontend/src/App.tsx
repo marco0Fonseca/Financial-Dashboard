@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import Login from './components/Login.tsx';
 import PurchaseForm from './components/PurchaseForm.tsx';
@@ -7,8 +6,8 @@ import Dashboard from './components/Dashboard.tsx';
 import Sidebar from './components/Sidebar.tsx';
 import Dividas from './components/Dividas.tsx';
 import Investimentos from './components/Investimentos.tsx';
+import Header from './components/Header.tsx';
 import './global.css'
-
 
 export interface Purchase {
   description: string;
@@ -32,6 +31,10 @@ function App() {
 
   const handleLogin = (email: string) => {
     setLoggedInUser(email);
+  };
+
+  const handleLogout = () => {
+    setLoggedInUser(null);
   };
 
   if (!loggedInUser) {
@@ -73,15 +76,18 @@ function App() {
   }
 
   return (
-    <div className="app-container">
-      <Sidebar selected={selectedPage} onSelect={setSelectedPage} />
-      <main className="app-content">
-        <h1>Controle de Finanças Pessoais</h1>
-        <p>Bem-vindo, {loggedInUser}</p>
-        {content}
-      </main>
-
-    </div>
+    <>
+      {/* Cabeçalho aparece sempre que o usuário está logado */}
+      <Header onLogout={handleLogout} />
+      <div className="app-container" style={{ paddingTop: 56 }}>
+        <Sidebar selected={selectedPage} onSelect={setSelectedPage} />
+        <main className="app-content">
+          <h1>Controle de Finanças Pessoais</h1>
+          <p>Bem-vindo, {loggedInUser}</p>
+          {content}
+        </main>
+      </div>
+    </>
   );
 }
 
