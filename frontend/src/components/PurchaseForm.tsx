@@ -114,7 +114,7 @@ function PurchaseForm({ onAddPurchase }: PurchaseFormProps) {
               type="text"
               value={formatDateDisplay(getTodayISO())}
               disabled
-              style={{ color: '#1aa8bc', background: '#f3f3f3' }}
+              style={{background: '#f3f3f3' }}
               className="pf-date-field"
             />
           ) : (
