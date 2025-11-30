@@ -193,8 +193,8 @@ const styles = {
   progressBar: { height: '100%', transition: 'width 0.5s ease-in-out' },
   paymentArea: { marginTop: '10px', background: '#f8f9fa', padding: '10px', borderRadius: '8px' },
   inputPayment: { flex: 1, padding: '8px', borderRadius: '4px', border: '1px solid #ddd', width: '60%' },
-  btnPay: { padding: '8px 15px', background: '#27ae60', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', marginLeft: '5px' },
-  quitadoBadge: { background: '#e8f8f5', color: '#27ae60', padding: '10px', borderRadius: '6px', textAlign: 'center' as 'center', fontWeight: 'bold' as 'bold', border: '1px solid #27ae60' },
+  btnPay: { padding: '8px 15px', background: '#1abc9c', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', marginLeft: '5px' },
+  quitadoBadge: { background: '#e8f8f5', color: '#1abc9c', padding: '10px', borderRadius: '6px', textAlign: 'center' as 'center', fontWeight: 'bold' as 'bold', border: '1px solid #27ae60' },
   errorMsg: { color: '#e74c3c', fontSize: '12px', marginTop: '5px', fontWeight: 'bold' as 'bold' }
 };
 
