@@ -1,103 +1,173 @@
 import React, { useState } from 'react';
 
-function Login({ onLogin }) {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+interface LoginProps {
+  onLogin: (email: string) => void;
+}
 
-  const handleSubmit = (e) => {
+const Login: React.FC<LoginProps> = ({ onLogin }) => {
+  const [email, setEmail] = useState('');
+  const [senha, setSenha] = useState('');
+  const [confirmSenha, setConfirmSenha] = useState('');
+  const [isCadastro, setIsCadastro] = useState(false);
+
+  const isSenhaIgual = !isCadastro || senha === confirmSenha;
+
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Aqui você pode validar os dados ou chamar API real, mas vamos simular
-    if (email && password) {
-      onLogin(email);
+    if (isCadastro) {
+      if (isSenhaIgual && senha.length > 0) {
+        // Aqui você pode adicionar lógica de cadastro real
+        onLogin(email);
+      }
     } else {
-      alert('Por favor, preencha email e senha.');
+      onLogin(email);
     }
   };
 
   return (
-    <div className="login-container">
-      <form className="login-form" onSubmit={handleSubmit}>
-        <h2>Entrar no Sistema</h2>
-        <label>Email:</label>
-        <input
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-          placeholder="Digite seu email"
-        />
-        <label>Senha:</label>
-        <input
-          type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-          placeholder="Digite sua senha"
-        />
-        <button type="submit">Entrar</button>
+    <div style={{
+      minHeight: '100vh',
+      background: '#2c3e50',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center'
+    }}>
+      <div>
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 24 }}>
+          <img
+            src="/loginLogo.png"
+            alt="Login Logo"
+            style={{ width: 216, height: 72, objectFit: 'contain' }}
+          />
+        </div>
+      <form
+        onSubmit={handleSubmit}
+        style={{
+          background: '#fff',
+          padding: 32,
+          borderRadius: 12,
+          boxShadow: '0 2px 12px rgba(44,62,80,0.10)',
+          minWidth: 320
+        }}
+      >
+        <h2 style={{ textAlign: 'center', marginBottom: 24 }}>
+          {isCadastro ? 'Cadastro de Usuário' : 'Entrar no Sistema'}
+        </h2>
+        <div style={{ marginBottom: 16 }}>
+          <label>
+            E-mail:
+            <input
+              type="email"
+              value={email}
+              onChange={e => setEmail(e.target.value)}
+              required
+              style={{
+                width: '94.5%',
+                padding: 8,
+                marginTop: 4,
+                borderRadius: 4,
+                border: '1px solid #ccc'
+              }}
+            />
+          </label>
+        </div>
+        <div style={{ marginBottom: 16 }}>
+          <label>
+            Senha:
+            <input
+              type="password"
+              value={senha}
+              onChange={e => setSenha(e.target.value)}
+              required
+              style={{
+                width: '94.5%',
+                padding: 8,
+                marginTop: 4,
+                borderRadius: 4,
+                border: '1px solid #ccc'
+              }}
+            />
+          </label>
+        </div>
+        {isCadastro && (
+          <div style={{ marginBottom: 16 }}>
+            <label>
+              Confirmar senha:
+              <input
+                type="password"
+                value={confirmSenha}
+                onChange={e => setConfirmSenha(e.target.value)}
+                required
+                style={{
+                  width: '94.5%',
+                  padding: 8,
+                  marginTop: 4,
+                  borderRadius: 4,
+                  border: '1px solid #ccc'
+                }}
+              />
+            </label>
+            {senha && confirmSenha && senha !== confirmSenha && (
+              <div style={{ color: 'red', fontSize: 13, marginTop: 4 }}>
+                As senhas não coincidem.
+              </div>
+            )}
+          </div>
+        )}
+        <button
+          type="submit"
+          disabled={isCadastro && (!isSenhaIgual || senha.length === 0)}
+          style={{
+            width: '100%',
+            padding: 10,
+            background: isCadastro && (!isSenhaIgual || senha.length === 0) ? '#ccc' : '#1abc9c',
+            color: '#fff',
+            border: 'none',
+            borderRadius: 4,
+            fontWeight: 600,
+            cursor: isCadastro && (!isSenhaIgual || senha.length === 0) ? 'not-allowed' : 'pointer',
+            marginBottom: 12
+          }}
+        >
+          {isCadastro ? 'Cadastrar' : 'Entrar'}
+        </button>
+        <div style={{ textAlign: 'center' }}>
+          {!isCadastro ? (
+            <button
+              type="button"
+              onClick={() => setIsCadastro(true)}
+              style={{
+                background: 'none',
+                border: 'none',
+                color: '#1abc9c',
+                cursor: 'pointer',
+                textDecoration: 'underline',
+                fontSize: 15
+              }}
+            >
+              Cadastrar usuário
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setIsCadastro(false)}
+              style={{
+                background: 'none',
+                border: 'none',
+                color: '#1abc9c',
+                cursor: 'pointer',
+                textDecoration: 'underline',
+                fontSize: 15
+              }}
+            >
+              Voltar para login
+            </button>
+          )}
+        </div>
       </form>
-      <style jsx>{`
-        .login-container {
-          display: flex;
-          height: 100vh;
-          justify-content: center;
-          align-items: center;
-          background: linear-gradient(180deg, #ffffff 0%, #fbfbff 100%);
-          color: #12222b;
-          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
-        }
-        .login-form {
-          background: #fff;
-          padding: 2rem 2.5rem 2rem 2.5rem;
-          border-radius: 14px;
-          box-shadow: 0 6px 18px rgba(23, 32, 88, 0.10);
-          width: 340px;
-          display: flex;
-          flex-direction: column;
-          align-items: stretch;
-        }
-        .login-form h2 {
-          margin-bottom: 1.5rem;
-          color: #1abc9c;
-          text-align: center;
-        }
-        input {
-          margin-bottom: 1.2rem;
-          padding: 0.7rem 1rem;
-          border-radius: 8px;
-          border: 1px solid #e6e9ef;
-          font-size: 1rem;
-          background: #f8fafc;
-          color: #12222b;
-          transition: border-color 0.15s, box-shadow 0.15s;
-        }
-        input:focus {
-          border-color: #1abc9c;
-          box-shadow: 0 0 0 2px rgba(26,188,156,0.10);
-        }
-        button {
-          background: #1abc9c;
-          color: #fff;
-          font-weight: 600;
-          border: none;
-          padding: 0.85rem 0;
-          cursor: pointer;
-          border-radius: 8px;
-          font-size: 1.08rem;
-          box-shadow: none;
-          transition: background 0.15s;
-        }
-        button:hover {
-          background: #17a689;
-        }
-        label {
-          margin-bottom: 0.25rem;
-          color: #374151;
-          font-size: 0.98rem;
-        }
-      `}</style>
+      </div>
     </div>
   );
-}
+};
 
 export default Login;

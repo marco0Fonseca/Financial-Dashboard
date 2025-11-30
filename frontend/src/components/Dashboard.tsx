@@ -170,7 +170,7 @@ const Dashboard: React.FC<DashboardProps> = ({ purchases }) => {
             display: 'flex',
             justifyContent: 'flex-end', // Alinha à direita
             alignItems: 'flex-start',
-            marginTop: '-200px',
+            marginTop: '-160px',
           }}
         >
           <div style={{ transform: 'translateX(-50%)' }}>
