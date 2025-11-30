@@ -42,7 +42,7 @@ function Login({ onLogin }) {
           height: 100vh;
           justify-content: center;
           align-items: center;
-          background: linear-gradient(180deg, #ffffff 0%, #fbfbff 100%);
+          background: #2c3e50;
           color: #12222b;
           font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
         }
