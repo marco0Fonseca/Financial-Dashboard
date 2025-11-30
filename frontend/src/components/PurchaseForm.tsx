@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import './PurchaseForm.css';
 
-
 function getTodayISO() {
   const today = new Date();
   return today.toISOString().slice(0, 10);
@@ -108,7 +107,6 @@ function PurchaseForm({ onAddPurchase }: PurchaseFormProps) {
           />
         </label>
 
-        {/* Data field to the right of Categoria */}
         <label className="pf-field">
           <span className="pf-label">Data</span>
           {useCurrentDate ? (
@@ -116,39 +114,41 @@ function PurchaseForm({ onAddPurchase }: PurchaseFormProps) {
               type="text"
               value={formatDateDisplay(getTodayISO())}
               disabled
-              style={{ color: '#888', background: '#f3f3f3' }}
+              style={{background: '#f3f3f3' }}
               className="pf-date-field"
             />
           ) : (
             <input
               type="text"
               value={displayValue}
-                onChange={(e) => {
-                  const val = e.target.value.replace(/\s/g, '');
-                  setDisplayValue(e.target.value); // Always update display
-                  
-                  const match = val.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
-                  if (match) {
-                    setDate(`${match[3]}-${match[2]}-${match[1]}`);
-                  }
-                }}
+              onChange={(e) => {
+                const val = e.target.value.replace(/\s/g, '');
+                setDisplayValue(e.target.value);
+                
+                const match = val.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+                if (match) {
+                  setDate(`${match[3]}-${match[2]}-${match[1]}`);
+                }
+              }}
               className="pf-date-field"
               placeholder="DD / MM / AAAA"
               maxLength={14}
             />
           )}
-          <label style={{ display: 'block', marginTop: 4, fontWeight: 400 }}>
-            <input
-              type="checkbox"
-              checked={useCurrentDate}
-              onChange={(e) => {
-                setUseCurrentDate(e.target.checked);
-                if (e.target.checked) setDate(getTodayISO());
-              }}
-              style={{ marginRight: 6 }}
-            />
-            Usar data atual
-          </label>
+          
+          <div style={{ marginTop: '8px' }}>
+            <label className="pf-recurring" style={{margin: 0, padding: 0, fontWeight: 400}}>
+              <input
+                type="checkbox"
+                checked={useCurrentDate}
+                onChange={(e) => {
+                  setUseCurrentDate(e.target.checked);
+                  if (e.target.checked) setDate(getTodayISO());
+                }}
+              />
+              <span className="pf-label-inline">Usar data atual</span>
+            </label>
+          </div>
         </label>
 
         <div className="pf-field">
