@@ -4,7 +4,7 @@ import { TransactionCategory, TransactionTypeClass } from '../entities/transacti
 import { Transaction } from '../entities/transactions/transaction';
 import { hashPassword } from '../server/auth';
 
-const prisma = new PrismaClient();
+export const prisma = new PrismaClient();
 
 export class UserRepository {
   async create(user : User) : Promise<User>{
@@ -153,7 +153,7 @@ export class TransactionCategoryRepository {
 
   async delete(id : number){
     return prisma.transactionCategory.delete({
-      where: { id }
+      where: { id : id }
     })
   }
 
@@ -173,14 +173,14 @@ export class TransactionCategoryRepository {
 }
 
 export class TransactionRepository {
-  async create(transaction : Transaction, user : User){
+  async create(transaction : Transaction){
     const transactionData = await prisma.transaction.create({
       data: {
         value : transaction.value, 
         date : transaction.date,
         recurrence : transaction.recurrence,
         categoryId : transaction.category.id,
-        userId : user.id 
+        userId : transaction.userId
       }
     })
 
@@ -203,7 +203,8 @@ export class TransactionRepository {
       category!,
       transactionData.value,
       transactionData.date,
-      transactionData.recurrence
+      transactionData.recurrence,
+      transactionData.userId
     );
 
     return transaction;
@@ -226,7 +227,8 @@ export class TransactionRepository {
         category!,
         td.value,
         td.date,
-        td.recurrence
+        td.recurrence,
+        td.userId
       );
 
       transactions.push(transaction);
@@ -257,7 +259,8 @@ export class TransactionRepository {
         category!,
         td.value,
         td.date,
-        td.recurrence
+        td.recurrence,
+        td.userId
       );
 
       transactions.push(transaction);
@@ -288,7 +291,8 @@ export class TransactionRepository {
         category!,
         td.value,
         td.date,
-        td.recurrence
+        td.recurrence,
+        td.userId
       );
 
       transactions.push(transaction);
@@ -321,6 +325,13 @@ export class TransactionRepository {
     return prisma.transaction.update({
       where: { id },
       data: { categoryId: newCategoryId }
+    })
+  }
+
+  async updateRecurrence(id : number, newRecurrence : boolean){
+    return prisma.transaction.update({
+      where: { id : id },
+      data: { recurrence: newRecurrence }
     })
   }
 }

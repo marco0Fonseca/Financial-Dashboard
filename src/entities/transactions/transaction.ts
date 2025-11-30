@@ -6,17 +6,20 @@ export class Transaction {
     private _value: number = 0;
     public date: Date;
     public recurrence : boolean;
+    public userId : string
 
     constructor(
         category: TransactionCategory,
         value: number,
         date: Date,
-        recurrence : boolean
+        recurrence : boolean,
+        userId : string
     ) {
         this.category = category;
         this.value = value;
         this.date = date;
         this.recurrence = recurrence;
+        this.userId = userId;
     }
 
     get value() : number{
