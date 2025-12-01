@@ -9,18 +9,47 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
   const [senha, setSenha] = useState('');
   const [confirmSenha, setConfirmSenha] = useState('');
   const [isCadastro, setIsCadastro] = useState(false);
+  const [nome, setNome] = useState('');
+  const API_URL = 'http://localhost:3001/api/auth';
+  
 
   const isSenhaIgual = !isCadastro || senha === confirmSenha;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (isCadastro) {
       if (isSenhaIgual && senha.length > 0) {
-        // Aqui você pode adicionar lógica de cadastro real
-        onLogin(email);
+        const response = await fetch(`${API_URL}/signup`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name: nome, email, password: senha }),
+        });
+        if (response.ok) {
+          onLogin(email);
+        } else {
+          let errorMsg = 'Erro ao cadastrar usuário';
+          const contentType = response.headers.get('content-type');
+          if (contentType && contentType.includes('application/json')) {
+            const errorData = await response.json();
+            errorMsg = errorData.error || errorMsg;
+          } else {
+            errorMsg = await response.text();
+          }
+          alert(errorMsg);
+        }
       }
     } else {
-      onLogin(email);
+      const response = await fetch(`${API_URL}/signin`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password: senha }),
+      });
+      if (response.ok) {
+        onLogin(email);
+      } else {
+        // Trate erro de login aqui
+        alert('Erro ao fazer login');
+      }
     }
   };
 
@@ -53,6 +82,26 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
         <h2 style={{ textAlign: 'center', marginBottom: 24 }}>
           {isCadastro ? 'Cadastro de Usuário' : 'Entrar no Sistema'}
         </h2>
+        {isCadastro && (
+          <div style={{ marginBottom: 16 }}>
+            <label>
+              Nome:
+              <input
+                type="text"
+                value={nome}
+                onChange={e => setNome(e.target.value)}
+                required
+                style={{
+                  width: '94.5%',
+                  padding: 8,
+                  marginTop: 4,
+                  borderRadius: 4,
+                  border: '1px solid #ccc'
+                }}
+              />
+            </label>
+          </div>
+        )}
         <div style={{ marginBottom: 16 }}>
           <label>
             E-mail:
