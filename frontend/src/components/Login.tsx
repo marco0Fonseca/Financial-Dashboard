@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-// Atualizamos a interface para receber todos os dados necessários
+// Interface para os dados vindos do Login
 interface AuthData {
   email: string;
   id: string;
@@ -19,7 +19,6 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
   const [isCadastro, setIsCadastro] = useState(false);
   const [nome, setNome] = useState('');
   
-  // Se o proxy estiver funcionando use apenas '/api/auth', senão use o localhost:3001
   const API_URL = 'http://localhost:3001/api/auth'; 
 
   const isSenhaIgual = !isCadastro || senha === confirmSenha;
@@ -42,7 +41,6 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
       const data = await response.json();
 
       if (response.ok) {
-        // AQUI ESTÁ A CORREÇÃO:
         // Passamos o objeto completo retornado pelo backend
         onLogin({
           email: data.user.email,
@@ -65,112 +63,128 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
       background: '#2c3e50',
       display: 'flex',
       alignItems: 'center',
-      justifyContent: 'center'
+      justifyContent: 'center',
+      padding: '20px'
     }}>
-      <div>
-        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 24 }}>
-           {/* Seus componentes de imagem... */}
-           <h1 style={{color: 'white'}}>Financial Dashboard</h1>
+      <div style={{ width: '100%', maxWidth: '400px' }}>
+        
+        {/* --- ÁREA DO LOGO --- */}
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 32 }}>
+           <img 
+             src="/loginLogo.png" 
+             alt="Logo Financial Dashboard" 
+             style={{ 
+               maxWidth: '280px', 
+               height: 'auto', 
+               objectFit: 'contain'
+             }} 
+           />
         </div>
-      <form
-        onSubmit={handleSubmit}
-        style={{
-          background: '#fff',
-          padding: 32,
-          borderRadius: 12,
-          boxShadow: '0 2px 12px rgba(44,62,80,0.10)',
-          minWidth: 320
-        }}
-      >
-        <h2 style={{ textAlign: 'center', marginBottom: 24 }}>
-          {isCadastro ? 'Cadastro de Usuário' : 'Entrar no Sistema'}
-        </h2>
-        {isCadastro && (
-          <div style={{ marginBottom: 16 }}>
-            <label>
-              Nome:
+        {/* -------------------- */}
+
+        <form
+          onSubmit={handleSubmit}
+          style={{
+            background: '#fff',
+            padding: 32,
+            borderRadius: 12,
+            boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
+          }}
+        >
+          <h2 style={{ textAlign: 'center', marginBottom: 24, color: '#333' }}>
+            {isCadastro ? 'Criar Conta' : 'Bem-vindo'}
+          </h2>
+          
+          {isCadastro && (
+            <div style={{ marginBottom: 16 }}>
+              <label style={{display: 'block', marginBottom: 4, fontWeight: 500, color: '#555'}}>Nome</label>
               <input
                 type="text"
                 value={nome}
                 onChange={e => setNome(e.target.value)}
                 required
-                style={{ width: '94.5%', padding: 8, marginTop: 4, borderRadius: 4, border: '1px solid #ccc' }}
+                style={{ width: '100%', padding: '10px', borderRadius: 6, border: '1px solid #ddd', boxSizing: 'border-box' }}
               />
-            </label>
-          </div>
-        )}
-        <div style={{ marginBottom: 16 }}>
-          <label>
-            E-mail:
+            </div>
+          )}
+          
+          <div style={{ marginBottom: 16 }}>
+            <label style={{display: 'block', marginBottom: 4, fontWeight: 500, color: '#555'}}>E-mail</label>
             <input
               type="email"
               value={email}
               onChange={e => setEmail(e.target.value)}
               required
-              style={{ width: '94.5%', padding: 8, marginTop: 4, borderRadius: 4, border: '1px solid #ccc' }}
+              style={{ width: '100%', padding: '10px', borderRadius: 6, border: '1px solid #ddd', boxSizing: 'border-box' }}
             />
-          </label>
-        </div>
-        <div style={{ marginBottom: 16 }}>
-          <label>
-            Senha:
+          </div>
+          
+          <div style={{ marginBottom: 16 }}>
+            <label style={{display: 'block', marginBottom: 4, fontWeight: 500, color: '#555'}}>Senha</label>
             <input
               type="password"
               value={senha}
               onChange={e => setSenha(e.target.value)}
               required
-              style={{ width: '94.5%', padding: 8, marginTop: 4, borderRadius: 4, border: '1px solid #ccc' }}
+              style={{ width: '100%', padding: '10px', borderRadius: 6, border: '1px solid #ddd', boxSizing: 'border-box' }}
             />
-          </label>
-        </div>
-        {isCadastro && (
-          <div style={{ marginBottom: 16 }}>
-            <label>
-              Confirmar senha:
+          </div>
+
+          {isCadastro && (
+            <div style={{ marginBottom: 24 }}>
+              <label style={{display: 'block', marginBottom: 4, fontWeight: 500, color: '#555'}}>Confirmar senha</label>
               <input
                 type="password"
                 value={confirmSenha}
                 onChange={e => setConfirmSenha(e.target.value)}
                 required
-                style={{ width: '94.5%', padding: 8, marginTop: 4, borderRadius: 4, border: '1px solid #ccc' }}
+                style={{ width: '100%', padding: '10px', borderRadius: 6, border: '1px solid #ddd', boxSizing: 'border-box' }}
               />
-            </label>
+              {senha && confirmSenha && senha !== confirmSenha && (
+                <div style={{ color: 'red', fontSize: 13, marginTop: 4 }}>
+                  As senhas não coincidem.
+                </div>
+              )}
+            </div>
+          )}
+
+          <button
+            type="submit"
+            disabled={isCadastro && (!isSenhaIgual || senha.length === 0)}
+            style={{
+              width: '100%',
+              padding: '12px',
+              background: isCadastro && (!isSenhaIgual || senha.length === 0) ? '#ccc' : '#1abc9c',
+              color: '#fff',
+              border: 'none',
+              borderRadius: 6,
+              fontWeight: 600,
+              cursor: isCadastro && (!isSenhaIgual || senha.length === 0) ? 'not-allowed' : 'pointer',
+              marginBottom: 16,
+              fontSize: '1rem',
+              transition: 'background 0.2s'
+            }}
+          >
+            {isCadastro ? 'Cadastrar' : 'Entrar'}
+          </button>
+
+          <div style={{ textAlign: 'center' }}>
+              <button
+                type="button"
+                onClick={() => setIsCadastro(!isCadastro)}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: '#1abc9c',
+                  cursor: 'pointer',
+                  textDecoration: 'underline',
+                  fontSize: '0.9rem'
+                }}
+              >
+                {isCadastro ? 'Já tenho uma conta' : 'Criar nova conta'}
+              </button>
           </div>
-        )}
-        <button
-          type="submit"
-          disabled={isCadastro && (!isSenhaIgual || senha.length === 0)}
-          style={{
-            width: '100%',
-            padding: 10,
-            background: isCadastro && (!isSenhaIgual || senha.length === 0) ? '#ccc' : '#1abc9c',
-            color: '#fff',
-            border: 'none',
-            borderRadius: 4,
-            fontWeight: 600,
-            cursor: isCadastro && (!isSenhaIgual || senha.length === 0) ? 'not-allowed' : 'pointer',
-            marginBottom: 12
-          }}
-        >
-          {isCadastro ? 'Cadastrar' : 'Entrar'}
-        </button>
-        <div style={{ textAlign: 'center' }}>
-            <button
-              type="button"
-              onClick={() => setIsCadastro(!isCadastro)}
-              style={{
-                background: 'none',
-                border: 'none',
-                color: '#1abc9c',
-                cursor: 'pointer',
-                textDecoration: 'underline',
-                fontSize: 15
-              }}
-            >
-              {isCadastro ? 'Voltar para login' : 'Cadastrar usuário'}
-            </button>
-        </div>
-      </form>
+        </form>
       </div>
     </div>
   );
