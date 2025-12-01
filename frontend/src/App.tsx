@@ -24,6 +24,9 @@ function App() {
   const [loggedInUser, setLoggedInUser] = useState<string | null>(null);
   const [selectedPage, setSelectedPage] = useState<Page>('overview');
   const [purchases, setPurchases] = useState<Purchase[]>([]);
+  const [userId, setUserId] = useState(''); // Preencha com o ID do usuário autenticado
+  const [token, setToken] = useState('');   // Preencha com o token JWT do usuário
+  const [categories, setCategories] = useState([]); // Preencha com as categorias do usuário
 
   const addPurchase = (purchase: Purchase) => {
     setPurchases([...purchases, purchase]);
@@ -55,7 +58,12 @@ function App() {
       content = (
         <>
           <h2>Movimentações Mensais</h2>
-          <PurchaseForm onAddPurchase={addPurchase} />
+          <PurchaseForm
+            onAddPurchase={addPurchase}
+            userId={userId}
+            token={token}
+            categories={categories}
+          />
           <PurchaseList
             purchases={purchases}
             onDelete={(index: number) => {

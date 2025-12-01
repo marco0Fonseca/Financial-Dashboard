@@ -13,10 +13,13 @@ function formatDateDisplay(iso: string) {
 }
 
 interface PurchaseFormProps {
-  onAddPurchase: (purchase: any) => void;
+  onAddPurchase?: (purchase: any) => void; // Torna opcional
+  userId: string;
+  token: string;
+  categories: { id: string; name: string }[]; // Lista de categorias do usuário
 }
 
-function PurchaseForm({ onAddPurchase }: PurchaseFormProps) {
+function PurchaseForm({ onAddPurchase, userId, token, categories }: PurchaseFormProps) {
   const [description, setDescription] = useState('');
   const [amount, setAmount] = useState('');
   const [category, setCategory] = useState('');
@@ -26,16 +29,54 @@ function PurchaseForm({ onAddPurchase }: PurchaseFormProps) {
   const [date, setDate] = useState(getTodayISO());
   const [displayValue, setDisplayValue] = useState(formatDateDisplay(date));
 
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    onAddPurchase({ description, amount, category, isRecurring, type, date });
-    setDescription('');
-    setAmount('');
-    setCategory('');
-    setIsRecurring(false);
-    setType('gasto');
-    setUseCurrentDate(true);
-    setDate(getTodayISO());
+
+    // Busca o categoryId pelo nome digitado
+    const selectedCategory = categories.find(cat => cat.name.toLowerCase() === category.trim().toLowerCase());
+    if (!selectedCategory) {
+      alert('Categoria não encontrada. Cadastre ou selecione uma categoria válida.');
+      return;
+    }
+    const categoryId = selectedCategory.id;
+
+    const payload = {
+      description,
+      value: parseFloat(amount),
+      isRecurring,
+      type,
+      date,
+    };
+
+    try {
+      const response = await fetch(
+        `/api/users/${userId}/categories/${categoryId}/transactions`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+          },
+          body: JSON.stringify(payload),
+        }
+      );
+      if (!response.ok) {
+        throw new Error('Erro ao registrar transação');
+      }
+      const data = await response.json();
+      if (onAddPurchase) onAddPurchase(data);
+
+      // Limpa o formulário
+      setDescription('');
+      setAmount('');
+      setCategory('');
+      setIsRecurring(false);
+      setType('gasto');
+      setUseCurrentDate(true);
+      setDate(getTodayISO());
+    } catch (error: any) {
+      alert(error.message || 'Erro ao registrar transação');
+    }
   };
 
   return (
