@@ -1,7 +1,15 @@
 import React, { useState } from 'react';
 
+// Atualizamos a interface para receber todos os dados necessários
+interface AuthData {
+  email: string;
+  id: string;
+  token: string;
+  name: string;
+}
+
 interface LoginProps {
-  onLogin: (email: string) => void;
+  onLogin: (data: AuthData) => void;
 }
 
 const Login: React.FC<LoginProps> = ({ onLogin }) => {
@@ -10,46 +18,44 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
   const [confirmSenha, setConfirmSenha] = useState('');
   const [isCadastro, setIsCadastro] = useState(false);
   const [nome, setNome] = useState('');
-  const API_URL = 'http://localhost:3001/api/auth';
   
+  // Se o proxy estiver funcionando use apenas '/api/auth', senão use o localhost:3001
+  const API_URL = 'http://localhost:3001/api/auth'; 
 
   const isSenhaIgual = !isCadastro || senha === confirmSenha;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (isCadastro) {
-      if (isSenhaIgual && senha.length > 0) {
-        const response = await fetch(`${API_URL}/signup`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name: nome, email, password: senha }),
-        });
-        if (response.ok) {
-          onLogin(email);
-        } else {
-          let errorMsg = 'Erro ao cadastrar usuário';
-          const contentType = response.headers.get('content-type');
-          if (contentType && contentType.includes('application/json')) {
-            const errorData = await response.json();
-            errorMsg = errorData.error || errorMsg;
-          } else {
-            errorMsg = await response.text();
-          }
-          alert(errorMsg);
-        }
-      }
-    } else {
-      const response = await fetch(`${API_URL}/signin`, {
+    
+    try {
+      const endpoint = isCadastro ? '/signup' : '/signin';
+      const body = isCadastro 
+        ? { name: nome, email, password: senha }
+        : { email, password: senha };
+
+      const response = await fetch(`${API_URL}${endpoint}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password: senha }),
+        body: JSON.stringify(body),
       });
+
+      const data = await response.json();
+
       if (response.ok) {
-        onLogin(email);
+        // AQUI ESTÁ A CORREÇÃO:
+        // Passamos o objeto completo retornado pelo backend
+        onLogin({
+          email: data.user.email,
+          id: data.user.id,
+          name: data.user.name,
+          token: data.token
+        });
       } else {
-        // Trate erro de login aqui
-        alert('Erro ao fazer login');
+        alert(data.error || 'Erro na autenticação');
       }
+    } catch (error) {
+      console.error(error);
+      alert('Erro ao conectar com o servidor');
     }
   };
 
@@ -63,11 +69,8 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
     }}>
       <div>
         <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 24 }}>
-          <img
-            src="/loginLogo.png"
-            alt="Login Logo"
-            style={{ width: 216, height: 72, objectFit: 'contain' }}
-          />
+           {/* Seus componentes de imagem... */}
+           <h1 style={{color: 'white'}}>Financial Dashboard</h1>
         </div>
       <form
         onSubmit={handleSubmit}
@@ -91,13 +94,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                 value={nome}
                 onChange={e => setNome(e.target.value)}
                 required
-                style={{
-                  width: '94.5%',
-                  padding: 8,
-                  marginTop: 4,
-                  borderRadius: 4,
-                  border: '1px solid #ccc'
-                }}
+                style={{ width: '94.5%', padding: 8, marginTop: 4, borderRadius: 4, border: '1px solid #ccc' }}
               />
             </label>
           </div>
@@ -110,13 +107,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
               value={email}
               onChange={e => setEmail(e.target.value)}
               required
-              style={{
-                width: '94.5%',
-                padding: 8,
-                marginTop: 4,
-                borderRadius: 4,
-                border: '1px solid #ccc'
-              }}
+              style={{ width: '94.5%', padding: 8, marginTop: 4, borderRadius: 4, border: '1px solid #ccc' }}
             />
           </label>
         </div>
@@ -128,13 +119,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
               value={senha}
               onChange={e => setSenha(e.target.value)}
               required
-              style={{
-                width: '94.5%',
-                padding: 8,
-                marginTop: 4,
-                borderRadius: 4,
-                border: '1px solid #ccc'
-              }}
+              style={{ width: '94.5%', padding: 8, marginTop: 4, borderRadius: 4, border: '1px solid #ccc' }}
             />
           </label>
         </div>
@@ -147,20 +132,9 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                 value={confirmSenha}
                 onChange={e => setConfirmSenha(e.target.value)}
                 required
-                style={{
-                  width: '94.5%',
-                  padding: 8,
-                  marginTop: 4,
-                  borderRadius: 4,
-                  border: '1px solid #ccc'
-                }}
+                style={{ width: '94.5%', padding: 8, marginTop: 4, borderRadius: 4, border: '1px solid #ccc' }}
               />
             </label>
-            {senha && confirmSenha && senha !== confirmSenha && (
-              <div style={{ color: 'red', fontSize: 13, marginTop: 4 }}>
-                As senhas não coincidem.
-              </div>
-            )}
           </div>
         )}
         <button
@@ -181,10 +155,9 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
           {isCadastro ? 'Cadastrar' : 'Entrar'}
         </button>
         <div style={{ textAlign: 'center' }}>
-          {!isCadastro ? (
             <button
               type="button"
-              onClick={() => setIsCadastro(true)}
+              onClick={() => setIsCadastro(!isCadastro)}
               style={{
                 background: 'none',
                 border: 'none',
@@ -194,24 +167,8 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                 fontSize: 15
               }}
             >
-              Cadastrar usuário
+              {isCadastro ? 'Voltar para login' : 'Cadastrar usuário'}
             </button>
-          ) : (
-            <button
-              type="button"
-              onClick={() => setIsCadastro(false)}
-              style={{
-                background: 'none',
-                border: 'none',
-                color: '#1abc9c',
-                cursor: 'pointer',
-                textDecoration: 'underline',
-                fontSize: 15
-              }}
-            >
-              Voltar para login
-            </button>
-          )}
         </div>
       </form>
       </div>
