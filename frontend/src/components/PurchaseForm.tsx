@@ -8,11 +8,23 @@ function getTodayISO() {
   return today.toISOString().slice(0, 10);
 }
 
+// --- FUNÇÃO CORRIGIDA ---
 function formatDateDisplay(iso: string) {
   if (!iso) return '';
-  const [yyyy, mm, dd] = iso.split('-');
+  
+  // 1. Proteção: Se já tem barras, assume que já está formatada e retorna direto
+  if (iso.includes('/')) return iso;
+  
+  // 2. Tenta fazer o split pelo padrão ISO (YYYY-MM-DD)
+  const parts = iso.split('-');
+  
+  // 3. Se não tiver as 3 partes (Ano, Mês, Dia), retorna o valor original para evitar "undefined"
+  if (parts.length !== 3) return iso;
+
+  const [yyyy, mm, dd] = parts;
   return `${dd} / ${mm} / ${yyyy}`;
 }
+// ------------------------
 
 interface PurchaseFormProps {
   onAddPurchase?: (purchase: any) => void;
@@ -78,8 +90,7 @@ function PurchaseForm({ onAddPurchase, onCategoryCreated, userId, token, categor
       const payload = {
         value: parseFloat(amount),
         recurrence: isRecurring,
-        date: date,
-        // O backend ignora description, mas enviamos mesmo assim
+        date: date, // Envia a data ISO para o backend (o backend exige ISO)
       };
 
       const transResponse = await fetch(createTransactionUrl, {
@@ -96,16 +107,14 @@ function PurchaseForm({ onAddPurchase, onCategoryCreated, userId, token, categor
         throw new Error(errorData?.error || 'Erro ao registrar transação.');
       }
 
-      // 3. Atualiza a Tela (CORREÇÃO DO ERRO AQUI)
-      // Não usamos transResponse.json() direto, pois ele retorna objetos complexos.
-      // Montamos um objeto limpo compatível com a interface 'Purchase' do frontend.
+      // 3. Atualiza a Tela (com formatação visual correta)
       const newPurchaseFrontend = {
         description: description,
         amount: amount,
-        category: category, // Passamos a STRING (nome), não o objeto
+        category: category, 
         isRecurring: isRecurring,
         type: type as 'gasto' | 'ganho',
-        date: formatDateDisplay(date) // Mantém formato visual DD / MM / YYYY
+        date: formatDateDisplay(date) // A função blindada garante que o formato fique correto
       };
 
       if (onAddPurchase) onAddPurchase(newPurchaseFrontend);
@@ -167,16 +176,26 @@ function PurchaseForm({ onAddPurchase, onCategoryCreated, userId, token, categor
             <input type="text" value={formatDateDisplay(getTodayISO())} disabled style={{ background: '#f3f3f3' }} className="pf-date-field" />
           ) : (
             <input type="text" value={displayValue} onChange={(e) => {
-                const val = e.target.value; setDisplayValue(val);
+                const val = e.target.value; 
+                setDisplayValue(val);
+                
+                // Validação de entrada manual
                 const match = val.replace(/\s/g, '').match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
-                if (match) setDate(`${match[3]}-${match[2]}-${match[1]}`);
+                if (match) {
+                  // Se o usuário digitou data válida, salva como ISO no estado 'date'
+                  setDate(`${match[3]}-${match[2]}-${match[1]}`);
+                }
               }} className="pf-date-field" placeholder="DD / MM / AAAA" maxLength={14} />
           )}
           <div style={{ marginTop: '8px' }}>
             <label className="pf-recurring" style={{ margin: 0, fontWeight: 400 }}>
               <input type="checkbox" checked={useCurrentDate} onChange={(e) => {
                   setUseCurrentDate(e.target.checked);
-                  if (e.target.checked) { const t = getTodayISO(); setDate(t); setDisplayValue(formatDateDisplay(t)); }
+                  if (e.target.checked) { 
+                    const today = getTodayISO(); 
+                    setDate(today); 
+                    setDisplayValue(formatDateDisplay(today)); 
+                  }
                 }} />
               <span className="pf-label-inline">Usar data atual</span>
             </label>
