@@ -1,44 +1,22 @@
 .sidebar {
-  width: 120px;
-  height: 100vh;
-  background-color: #2c3e50;
+  width: 250px;
+  height: 100%;         /* Ocupa toda a altura disponível do pai */
+  background: #ffffff;
+  border-right: 1px solid #e0e0e0;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  padding-top: 20px;
-  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+  flex-shrink: 0;       /* Impede que a sidebar seja "esmagada" */
+  
+  /* Se o menu for muito longo, a sidebar terá seu próprio scroll */
+  overflow-y: auto;     
+  transition: all 0.3s ease;
 }
-.sidebar-item {
-  color: white;
-  text-align: center;
-  padding: 20px 0;
-  cursor: pointer;
-  user-select: none;
-  transition: background-color 0.3s ease;
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+
+/* Opcional: Estilo da barra de rolagem da sidebar para ficar sutil */
+.sidebar::-webkit-scrollbar {
+  width: 5px;
 }
-.sidebar-item:hover {
-  background-color: #34495e;
-}
-.sidebar-item.active {
-  background-color: #1abc9c;
-}
-img.icon-square {
-  width: 48px;
-  height: 48px;
-  margin-bottom: 8px;
-  object-fit: contain;
-}
-img.icon-rectangular {
-  width: 80px;
-  height: 40px;
-  margin-bottom: 8px;
-  object-fit: contain;
-}
-.sidebar-item span {
-  font-size: 14px;
-  font-weight: bold;
+.sidebar::-webkit-scrollbar-thumb {
+  background: #ddd;
+  border-radius: 4px;
 }

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import Login from './components/Login.tsx';
 import PurchaseForm from './components/PurchaseForm.tsx';
 import PurchaseList from './components/PurchaseList.tsx';
@@ -7,7 +7,7 @@ import Sidebar from './components/Sidebar.tsx';
 import Dividas from './components/Dividas.tsx';
 import Investimentos from './components/Investimentos.tsx';
 import Header from './components/Header.tsx';
-import './global.css'
+import './global.css';
 
 export interface Purchase {
   description: string;
@@ -18,7 +18,6 @@ export interface Purchase {
   date?: string;
 }
 
-// Interface para os dados vindos do Login
 interface AuthData {
   email: string;
   id: string;
@@ -33,26 +32,20 @@ function App() {
   const [selectedPage, setSelectedPage] = useState<Page>('overview');
   const [purchases, setPurchases] = useState<Purchase[]>([]);
   
-  // Estados vitais para a API
   const [userId, setUserId] = useState(''); 
   const [token, setToken] = useState('');   
-  const [categories, setCategories] = useState<any[]>([]); // Array de categorias
+  const [categories, setCategories] = useState<any[]>([]);
 
-  // Função auxiliar para buscar categorias do backend
   const fetchCategories = async (uid: string, tkn: string) => {
     try {
       const response = await fetch(`http://localhost:3001/api/users/${uid}/categories`, {
-        headers: {
-          'Authorization': `Bearer ${tkn}`
-        }
+        headers: { 'Authorization': `Bearer ${tkn}` }
       });
       if (response.ok) {
         const data = await response.json();
-        // O backend retorna algo como [{id: 1, label: "Comida", ...}]
-        // Vamos mapear para o formato que o front espera {id, name}
         const mappedCategories = data.map((c: any) => ({
           id: c.id,
-          name: c.label // O backend usa 'label', mas o front usa 'name' no PurchaseForm
+          name: c.label
         }));
         setCategories(mappedCategories);
       }
@@ -65,18 +58,14 @@ function App() {
     setPurchases([...purchases, purchase]);
   };
 
-  // Callback chamado quando uma NOVA categoria é criada pelo PurchaseForm
   const handleCategoryCreated = (newCategory: any) => {
     setCategories(prev => [...prev, { id: newCategory.id, name: newCategory.label }]);
   };
 
-  // Função atualizada para receber o objeto completo do Login
   const handleLogin = (data: AuthData) => {
-    setLoggedInUser(data.email);
+    setLoggedInUser(data.name); // Salva o nome
     setUserId(data.id);
     setToken(data.token);
-    
-    // Busca as categorias imediatamente após o login
     fetchCategories(data.id, data.token);
   };
 
@@ -108,7 +97,7 @@ function App() {
           <h2>Movimentações Mensais</h2>
           <PurchaseForm
             onAddPurchase={addPurchase}
-            onCategoryCreated={handleCategoryCreated} // Importante para atualizar a lista
+            onCategoryCreated={handleCategoryCreated}
             userId={userId}
             token={token}
             categories={categories}
@@ -135,7 +124,11 @@ function App() {
   return (
     <>
       <Header onLogout={handleLogout} user={loggedInUser} />
-      <div className="app-container" style={{ paddingTop: 56 }}>
+      
+      {/* REMOVIDO style={{ paddingTop: 56 }} 
+         Agora o CSS global cuida do posicionamento correto 
+      */}
+      <div className="app-container">
         <Sidebar selected={selectedPage} onSelect={setSelectedPage} />
         <main className="app-content">
           {content}
