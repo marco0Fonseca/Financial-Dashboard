@@ -2,6 +2,7 @@ import { TransactionCategory } from "./transactionCategory";
 
 export class Transaction {
     public id: number = -1;
+    public description?: string;
     public category: TransactionCategory;
     private _value: number = 0;
     public date: Date;
@@ -9,12 +10,14 @@ export class Transaction {
     public userId : string
 
     constructor(
+        description: string = ' ',
         category: TransactionCategory,
         value: number,
         date: Date,
         recurrence : boolean,
-        userId : string
+        userId : string,
     ) {
+        this.description = description;
         this.category = category;
         this.value = value;
         this.date = date;

@@ -1,8 +1,11 @@
 import { PrismaClient, TransactionType } from '@prisma/client'
 import { User } from '../entities/user';
-import { TransactionCategory, TransactionTypeClass } from '../entities/transactions/transactionCategory';
+import { TransactionCategory } from '../entities/transactions/transactionCategory';
+import { TransactionTypeClass } from "../entities/transactionTypeClass";
 import { Transaction } from '../entities/transactions/transaction';
 import { hashPassword } from '../server/auth';
+import { Investment } from '../entities/investment/investment';
+import { categoryRepo } from '../server/server';
 
 export const prisma = new PrismaClient();
 
@@ -151,6 +154,26 @@ export class TransactionCategoryRepository {
     return categories;
   }
 
+  async findCategoryByLabel(userId : string, label : string){
+    const categoryData = await prisma.transactionCategory.findFirst({
+      where: { userId : userId,
+               label: label }
+    })
+
+    if(!categoryData) return null;
+
+    const type = TransactionTypeClass[categoryData.type as keyof typeof TransactionTypeClass];
+
+    const category = new TransactionCategory(
+      categoryData.label,
+      type,
+      categoryData.userId
+    );
+    category.id = categoryData.id;
+
+    return category;
+  }
+
   async delete(id : number){
     return prisma.transactionCategory.delete({
       where: { id : id }
@@ -176,6 +199,7 @@ export class TransactionRepository {
   async create(transaction : Transaction){
     const transactionData = await prisma.transaction.create({
       data: {
+        description : transaction.description,
         value : transaction.value, 
         date : transaction.date,
         recurrence : transaction.recurrence,
@@ -196,10 +220,10 @@ export class TransactionRepository {
 
     if(!transactionData) return null;
 
-    const categoryRepo = new TransactionCategoryRepository;
     const category = await categoryRepo.findCategoryById(transactionData.categoryId);
 
     const transaction = new Transaction(
+      transactionData.description ?? undefined,
       category!,
       transactionData.value,
       transactionData.date,
@@ -218,12 +242,12 @@ export class TransactionRepository {
     if(!transactionData || transactionData.length === 0) return null;
 
     const transactions : Transaction[] = [];
-    const categoryRepo = new TransactionCategoryRepository;
 
     for (const td of transactionData) {
       const category = await categoryRepo.findCategoryById(td.categoryId);
 
       const transaction = new Transaction(
+        td.description ?? undefined,
         category!,
         td.value,
         td.date,
@@ -250,12 +274,12 @@ export class TransactionRepository {
     if(!transactionData || transactionData.length === 0) return null;
 
     const transactions : Transaction[] = [];
-    const categoryRepo = new TransactionCategoryRepository;
 
     for (const td of transactionData) {
       const category = await categoryRepo.findCategoryById(td.categoryId);
 
       const transaction = new Transaction(
+        td.description ?? undefined,
         category!,
         td.value,
         td.date,
@@ -282,12 +306,12 @@ export class TransactionRepository {
      if(!transactionData || transactionData.length === 0) return null;
 
     const transactions : Transaction[] = [];
-    const categoryRepo = new TransactionCategoryRepository;
 
     for (const td of transactionData) {
       const category = await categoryRepo.findCategoryById(td.categoryId);
 
       const transaction = new Transaction(
+        td.description ?? undefined,
         category!,
         td.value,
         td.date,
@@ -304,6 +328,13 @@ export class TransactionRepository {
   async delete(id : number){
     return prisma.transaction.delete({
       where: { id }
+    })
+  }
+
+  async updateDescription(id : number, newDescription : string){
+    return prisma.transaction.update({
+      where: { id },
+      data: { description: newDescription }
     })
   }
 
@@ -332,6 +363,138 @@ export class TransactionRepository {
     return prisma.transaction.update({
       where: { id : id },
       data: { recurrence: newRecurrence }
+    })
+  }
+}
+
+export class InvestmentRepository {
+  async create(investment : Investment){
+    const transactionData = await prisma.investment.create({
+      data: {
+        description : investment.description,
+        value : investment.value, 
+        date : investment.date,
+        recurrence : investment.recurrence,
+        rate : investment.rate,
+        entrace : investment.entrance,
+        recurrenceAdd : investment.recurrenceAdd,
+        monthsDuration : investment.monthsDuration,
+        categoryId : investment.category.id,
+        userId : investment.userId
+      }
+    })
+
+    investment.id = transactionData.id
+
+    return investment;
+  }
+
+  async findInvestmentById(id: number) {
+    const investmentData = await prisma.investment.findUnique({
+      where: { id: id }
+    })
+
+    if(!investmentData) return null;
+
+    const category = await categoryRepo.findCategoryById(investmentData.categoryId);
+
+    const investment = await Investment.create(
+      investmentData.description ?? undefined,
+      investmentData.value,
+      investmentData.date,
+      investmentData.recurrence,
+      investmentData.userId,
+      investmentData.rate,
+      investmentData.entrace,
+      investmentData.recurrenceAdd,
+      investmentData.monthsDuration
+    );
+
+    return investment;
+  }
+
+  async findUserInvestments(userId: string) {
+    const investmentData = await prisma.investment.findMany({
+      where: { userId }
+    });
+
+    if(!investmentData || investmentData.length === 0) return null;
+
+    const investments : Investment[] = [];
+
+    const category = await categoryRepo.findCategoryByLabel( userId,'Investment');
+    for (const ivd of investmentData) {
+      
+      const investment = await Investment.create(
+        ivd.description ?? undefined,
+        ivd.value,
+        ivd.date,
+        ivd.recurrence,
+        ivd.userId,
+        ivd.rate,
+        ivd.entrace,
+        ivd.recurrenceAdd,
+        ivd.monthsDuration
+      );
+
+      investments.push(investment);
+    }
+
+    return investments;
+  }
+
+  async delete(id : number){
+    return prisma.transaction.delete({
+      where: { id }
+    })
+  }
+
+  async updateDescription(id : number, newDescription : string){
+    return prisma.investment.update({
+      where: { id },
+      data: { description: newDescription }
+    })
+  }
+
+  async updateValue(id : number, newValue : number){
+    return prisma.investment.update({
+      where: { id },
+      data: { value: newValue }
+    })
+  }
+
+  async updateDate(id : number, newDate : Date){
+    return prisma.investment.update({
+      where: { id },
+      data: { date: newDate }
+    })
+  }
+
+  async updateRecurrence(id : number, newRecurrence : boolean){
+    return prisma.investment.update({
+      where: { id : id },
+      data: { recurrence: newRecurrence }
+    })
+  }
+
+  async updateRate(id : number, newRate : number){
+    return prisma.investment.update({
+      where: { id : id },
+      data: { rate: newRate }
+    })
+  }
+
+  async updateRecurrenceAdd(id : number, newRecurrenceAdd : number){
+    return prisma.investment.update({
+      where: { id : id },
+      data: { recurrenceAdd: newRecurrenceAdd }
+    })
+  }
+
+  async updateMonthsDuration(id : number, newMonthsDuration : number){
+    return prisma.investment.update({
+      where: { id : id },
+      data: { monthsDuration: newMonthsDuration }
     })
   }
 }
