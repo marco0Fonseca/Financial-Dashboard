@@ -1,11 +1,13 @@
 import express, { Request, Response } from 'express';
 import cors from 'cors'; 
-import { TransactionCategoryRepository, TransactionRepository, UserRepository } from '../repository/repository';
+import { InvestmentRepository, TransactionCategoryRepository, TransactionRepository, UserRepository } from '../repository/repository';
 import { User } from '../entities/user';
 import {generateToken, comparePassword, authenticateToken, AuthRequest} from './auth'
-import { TransactionCategory, TransactionTypeClass } from '../entities/transactions/transactionCategory';
+import { TransactionCategory } from '../entities/transactions/transactionCategory';
+import { TransactionTypeClass } from "../entities/transactionTypeClass";
 import { TransactionType } from '@prisma/client';
 import { Transaction } from '../entities/transactions/transaction';
+import { Investment } from '../entities/investment/investment';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -16,8 +18,9 @@ app.use(express.json());
 
 // Repositories
 const userRepo = new UserRepository();
-const categoryRepo = new TransactionCategoryRepository();
+export const categoryRepo = new TransactionCategoryRepository();
 const transactionRepo = new TransactionRepository();
+const investmentRepo = new InvestmentRepository();
 
 // ==================== AUTHENTICATION ROUTES ====================
 
@@ -565,7 +568,7 @@ app.delete('/api/users/:userId/category/:id', authenticateToken, async (req: Aut
 /**
  * POST /api/users/:userId/categories/:categoryId/transactions
  * Create a new transaction (protected - users can only create transactions for themselves)
- * Body: { value : number, date : date, recurrence : boolean }
+ * Body: { description : string | undefined,value : number, date : date, recurrence : boolean }
  */
 app.post('/api/users/:userId/categories/:categoryId/transactions', authenticateToken, async (req: AuthRequest, res: Response) => {
   try {
@@ -593,8 +596,8 @@ app.post('/api/users/:userId/categories/:categoryId/transactions', authenticateT
     if (!category) {
         return res.status(404).json({ error: 'Category not found' });
     }
-
-    const { value, date, recurrence } = req.body;
+    
+    const { description, value, date, recurrence } = req.body;
 
     if (!value || !value.trim()) {
       return res.status(400).json({ error: 'Value is required' });
@@ -622,11 +625,14 @@ app.post('/api/users/:userId/categories/:categoryId/transactions', authenticateT
       recurrenceBool = false;
     }
 
-    const transaction = new Transaction(category, 
+    const transaction = new Transaction( 
+      description,
+      category, 
       valueNumber,
       dateObj,
       recurrenceBool,
-      userId);
+      userId
+    );
 
     const savedTransaction = await transactionRepo.create(transaction);
     res.status(201).json(savedTransaction);
@@ -773,6 +779,54 @@ app.get('/api/users/:userId/transactions/byDate', authenticateToken, async (req:
 });
 
 /**
+ * PATCH /api/users/:userId/transactions/:id/description
+ * Update transaction description (protected - users can only update their own transactions)
+ * Body: { description : "newDescription" }
+ */
+app.patch('/api/users/:userId/transactions/:id/description', authenticateToken, async (req: AuthRequest, res: Response) =>{
+    try {
+        const userId = req.params.userId;
+        if (!userId || !userId.trim()) {
+            return res.status(400).json({ error: 'Invalid user ID' });
+        }
+
+        // Users can only update their transactions
+        if (req.userId !== userId) {
+            return res.status(403).json({ error: 'You can only update your own transactions' });
+        }
+
+        const transactionId = Number(req.params.id);
+        if (isNaN(transactionId)) {
+            return res.status(400).json({ error: 'Invalid transaction ID' });
+        }
+
+        const transaction = await transactionRepo.findTransactionById(transactionId);
+        if (!transaction) {
+            return res.status(404).json({ error: 'Transaction not found' });
+        }
+
+        let { description } = req.body.value;
+        if (!description || !description.trim()) {
+          description = ' ';
+        }
+
+        transaction.description = description;
+        const updateTrasaction = await transactionRepo.updateDescription(transactionId, description);
+        res.json({
+          userId : updateTrasaction.userId,
+          id : updateTrasaction.id,
+          description : updateTrasaction.description,
+          value : updateTrasaction.value,
+          date  : updateTrasaction.date,
+          recurrence : updateTrasaction.recurrence
+        });
+    } catch (error){
+        res.status(500).json({ error: 'Failed to update transaction', details: error });
+    }
+});
+
+
+/**
  * PATCH /api/users/:userId/transactions/:id/value
  * Update transaction value (protected - users can only update their own transactions)
  * Body: { value : "newValue" }
@@ -809,11 +863,12 @@ app.patch('/api/users/:userId/transactions/:id/value', authenticateToken, async 
           return res.status(400).json({ error: 'Invalid Value' });
         }
 
-        transaction.value = value;
+        transaction.value = valueNumber;
         const updateTrasaction = await transactionRepo.updateValue(transactionId, valueNumber);
         res.json({
           userId : updateTrasaction.userId,
           id : updateTrasaction.id,
+          description : updateTrasaction.description,
           value : updateTrasaction.value,
           date  : updateTrasaction.date,
           recurrence : updateTrasaction.recurrence
@@ -866,6 +921,7 @@ app.patch('/api/users/:userId/transactions/:id/date', authenticateToken, async (
           userId : updateTrasaction.userId,
           id : updateTrasaction.id,
           value : updateTrasaction.value,
+          description : updateTrasaction.description,
           date  : updateTrasaction.date,
           recurrence : updateTrasaction.recurrence
         });
@@ -875,10 +931,10 @@ app.patch('/api/users/:userId/transactions/:id/date', authenticateToken, async (
 });
 
 /**
- * PATCH /api/users/:userId/category/:categoryId/transactions/:id/
+ * PATCH /api/users/:userId/category/:categoryId/transactions/:id
  * Update transaction category (protected - users can only update their own transactions)
  */
-app.patch('/api/users/:userId/category/:categoryId/transactions/:id/', authenticateToken, async (req: AuthRequest, res: Response) =>{
+app.patch('/api/users/:userId/category/:categoryId/transactions/:id', authenticateToken, async (req: AuthRequest, res: Response) =>{
     try {
         const userId = req.params.userId;
         if (!userId || !userId.trim()) {
@@ -915,6 +971,7 @@ app.patch('/api/users/:userId/category/:categoryId/transactions/:id/', authentic
         res.json({
           userId : updateTrasaction.userId,
           id : updateTrasaction.id,
+          description : updateTrasaction.description,
           value : updateTrasaction.value,
           date  : updateTrasaction.date,
           recurrence : updateTrasaction.recurrence
@@ -971,6 +1028,7 @@ app.patch('/api/users/:userId/transactions/:id/recurrence', authenticateToken, a
         res.json({
           userId : updateTrasaction.userId,
           id : updateTrasaction.id,
+          description : updateTrasaction.description,
           value : updateTrasaction.value,
           date  : updateTrasaction.date,
           recurrence : updateTrasaction.recurrence
@@ -1003,7 +1061,7 @@ app.delete('/api/users/:userId/transactions/:id', authenticateToken, async (req:
 
         const transactionId = Number(req.params.id);
         if (isNaN(transactionId)) {
-            return res.status(400).json({ error: 'Invalid category ID' });
+            return res.status(400).json({ error: 'Invalid transaction ID' });
         }
 
         const transaction = await transactionRepo.findTransactionById(transactionId);
@@ -1015,6 +1073,726 @@ app.delete('/api/users/:userId/transactions/:id', authenticateToken, async (req:
         res.json({ message: 'Transaction deleted successfully' });
     } catch (error){
         res.status(500).json({ error: 'Failed to delete transaction', details: error });
+    }
+});
+
+// ==================== INVESTMENTS ROUTES ====================
+
+/**
+ * POST /api/users/:userId/categories/:categoryId/investments
+ * Create a new investments (protected - users can only create investments for themselves)
+ * Body: { description : string | undefined, value : number, date : date, recurrence : boolean, rate : number, entrace : number, recurrenceAdd : number, monthsDuration : number }
+ */
+app.post('/api/users/:userId/categories/:categoryId/investments', authenticateToken, async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.params.userId;
+    if (!userId || !userId.trim()) {
+        return res.status(400).json({ error: 'Invalid user ID' });
+    }
+
+    // Users can only create investments for themselves
+    if (req.userId !== userId) {
+        return res.status(403).json({ error: 'You can only create transactions for yourself' });
+    }
+
+    const user = await userRepo.findUserById(userId);
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const categoryId = Number(req.params.id);
+    if (isNaN(categoryId)) {
+        return res.status(400).json({ error: 'Invalid category ID' });
+    }
+    
+    const { description, value, date, recurrence, rate, entrance, recurrenceAdd, monthsDuration } = req.body;
+
+    if (!value || !value.trim()) {
+      return res.status(400).json({ error: 'Value is required' });
+    }
+    const valueNumber = Number(value);
+    if(isNaN(valueNumber)){
+      return res.status(400).json({ error: 'Invalid value' });
+    }
+
+    if (!date || !date.trim()) {
+      return res.status(400).json({ error: 'Date is required' });
+    }
+    const dateObj = new Date(date);
+    if (isNaN(dateObj.getTime())) {
+      return res.status(400).json({ error: "Invalid date format" });
+    }
+
+    let recurrenceBool: boolean;
+
+    if (recurrence === "true" || recurrence === true) {
+      recurrenceBool = true;
+    } else if (recurrence === "false" || recurrence === false) {
+      recurrenceBool = false;
+    } else {
+      recurrenceBool = false;
+    }
+
+    if (!rate || !rate.trim()) {
+      return res.status(400).json({ error: 'Rate is required' });
+    }
+    const rateNumber = Number(rate);
+    if (isNaN(rateNumber)) {
+      return res.status(400).json({ error: "Invalid rate" });
+    }
+
+    if (!entrance || !entrance.trim()) {
+      return res.status(400).json({ error: 'Entrance is required' });
+    }
+    const entranceNumber = Number(entrance);
+    if (isNaN(entranceNumber)) {
+      return res.status(400).json({ error: "Invalid entrance" });
+    }
+
+    let recurrenceAddNumber = Number(recurrenceAdd);
+    if (!recurrenceAdd || !recurrenceAdd.trim()) {
+      recurrenceAddNumber = 0;
+    }
+
+    if (!monthsDuration || !monthsDuration.trim()) {
+      return res.status(400).json({ error: 'Months Duration is required' });
+    }
+    const monthsDurationNumber = Number(monthsDuration);
+    if (isNaN(monthsDurationNumber)) {
+      return res.status(400).json({ error: "Invalid months duration" });
+    }
+
+    const investment = await Investment.create( 
+      description,
+      valueNumber,
+      dateObj,
+      recurrenceBool,
+      userId,
+      rateNumber,
+      entranceNumber,
+      recurrenceAddNumber,
+      monthsDurationNumber
+    );
+
+    const savedInvestment = await investmentRepo.create(investment);
+    res.status(201).json(savedInvestment);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to create investment', details: error });
+  }
+});
+
+/**
+ * GET /api/users/userId/investments/:id
+ * Get a investment by ID (protected - users can only access their own investments)
+ */
+app.get('/api/users/userId/investments/:id', authenticateToken, async (req: AuthRequest, res: Response) => {
+    try{
+        const userId = req.params.userId;
+        if (!userId || !userId.trim()) {
+            return res.status(400).json({ error: 'Invalid user ID' });
+        }
+
+        // Users can only access their own investments
+        if (req.userId !== userId) {
+            return res.status(403).json({ error: 'You can only access your own investments' });
+        }
+
+        const user = await userRepo.findUserById(userId);
+        if (!user) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+
+        const investmentId = Number(req.params.id);
+        if (isNaN(investmentId)) {
+            return res.status(400).json({ error: 'Invalid investment ID' });
+        }
+
+        const investment = await investmentRepo.findInvestmentById(investmentId);
+        if (!investment) {
+            return res.status(404).json({ error: 'Investment not found' });
+        }
+
+        res.json(investment);
+    }catch (error){
+        res.status(500).json({ error: 'Failed to fetch investment', details: error });
+    }
+});
+
+/**
+ * GET /api/users/:userId/investments
+ * Get all investments for a specific user (protected - users can only access their own investments)
+ */
+app.get('/api/users/:userId/investments', authenticateToken, async (req: AuthRequest, res: Response) => {
+    try{
+        const userId = req.params.userId;
+        if (!userId || !userId.trim()) {
+            return res.status(400).json({ error: 'Invalid user ID' });
+        }
+
+        // Users can only access their own investments
+        if (req.userId !== userId) {
+            return res.status(403).json({ error: 'You can only access your own investments' });
+        }
+
+        const user = await userRepo.findUserById(userId);
+        if (!user) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+
+        const investments = await investmentRepo.findUserInvestments(userId);
+        res.json(investments);
+    }catch (error){
+        res.status(500).json({ error: 'Failed to fetch investments', details: error });
+    }
+});
+
+/**
+ * GET /api/users/userId/investments/:id/gain
+ * Get the total gain of a investment in the end of months duration (protected - users can only access their own investments)
+ */
+app.get('/api/users/userId/investments/:id/gain', authenticateToken, async (req: AuthRequest, res: Response) => {
+    try{
+        const userId = req.params.userId;
+        if (!userId || !userId.trim()) {
+            return res.status(400).json({ error: 'Invalid user ID' });
+        }
+
+        // Users can only access their own investments
+        if (req.userId !== userId) {
+            return res.status(403).json({ error: 'You can only access your own investments' });
+        }
+
+        const user = await userRepo.findUserById(userId);
+        if (!user) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+
+        const investmentId = Number(req.params.id);
+        if (isNaN(investmentId)) {
+            return res.status(400).json({ error: 'Invalid investment ID' });
+        }
+
+        const investment = await investmentRepo.findInvestmentById(investmentId);
+        if (!investment) {
+            return res.status(404).json({ error: 'Investment not found' });
+        }
+
+        res.json(investment.gain());
+    }catch (error){
+        res.status(500).json({ error: 'Failed to fetch investment gain', details: error });
+    }
+});
+
+/**
+ * GET /api/users/userId/investments/:id/nowGain
+ * Get gain until now of a investment in the end of months duration (protected - users can only access their own investments)
+ */
+app.get('/api/users/userId/investments/:id/nowGain', authenticateToken, async (req: AuthRequest, res: Response) => {
+    try{
+        const userId = req.params.userId;
+        if (!userId || !userId.trim()) {
+            return res.status(400).json({ error: 'Invalid user ID' });
+        }
+
+        // Users can only access their own investments
+        if (req.userId !== userId) {
+            return res.status(403).json({ error: 'You can only access your own investments' });
+        }
+
+        const user = await userRepo.findUserById(userId);
+        if (!user) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+
+        const investmentId = Number(req.params.id);
+        if (isNaN(investmentId)) {
+            return res.status(400).json({ error: 'Invalid investment ID' });
+        }
+
+        const investment = await investmentRepo.findInvestmentById(investmentId);
+        if (!investment) {
+            return res.status(404).json({ error: 'Investment not found' });
+        }
+
+        res.json(investment.calculateUntilNowGain());
+    }catch (error){
+        res.status(500).json({ error: 'Failed to fetch investment gain', details: error });
+    }
+});
+
+/**
+ * GET /api/users/userId/investments/:id/gain/:date
+ * Get the total gain of a investment at a specific date(protected - users can only access their own investments)
+ */
+app.get('/api/users/userId/investments/:id/gain/:date', authenticateToken, async (req: AuthRequest, res: Response) => {
+    try{
+        const userId = req.params.userId;
+        if (!userId || !userId.trim()) {
+            return res.status(400).json({ error: 'Invalid user ID' });
+        }
+
+        // Users can only access their own investments
+        if (req.userId !== userId) {
+            return res.status(403).json({ error: 'You can only access your own investments' });
+        }
+
+        const user = await userRepo.findUserById(userId);
+        if (!user) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+
+        const date  = req.params.date;
+        if(!date || !date.trim()){
+          return res.status(400).json({ error: 'Date is required' });
+        }
+        const dateObj = new Date(date);
+        if(isNaN(dateObj.getTime())){
+          return res.status(400).json({ error: 'Invalid date format' });
+        }
+
+        const investmentId = Number(req.params.id);
+        if (isNaN(investmentId)) {
+          return res.status(400).json({ error: 'Invalid investment ID' });
+        }
+
+        const investment = await investmentRepo.findInvestmentById(investmentId);
+        if (!investment) {
+            return res.status(404).json({ error: 'Investment not found' });
+        }
+
+        res.json(investment.calculateOnMonth(dateObj));
+    }catch (error){
+        res.status(500).json({ error: 'Failed to fetch investment gain', details: error });
+    }
+});
+
+/**
+ * PATCH /api/users/:userId/investments/:id/description
+ * Update investments description (protected - users can only update their own investments)
+ * Body: { description : "newDescription" }
+ */
+app.patch('/api/users/:userId/investments/:id/description', authenticateToken, async (req: AuthRequest, res: Response) =>{
+    try {
+        const userId = req.params.userId;
+        if (!userId || !userId.trim()) {
+            return res.status(400).json({ error: 'Invalid user ID' });
+        }
+
+        // Users can only update their investments
+        if (req.userId !== userId) {
+            return res.status(403).json({ error: 'You can only update your own investments' });
+        }
+
+        const investmentId = Number(req.params.id);
+        if (isNaN(investmentId)) {
+            return res.status(400).json({ error: 'Invalid investment ID' });
+        }
+
+        const investment = await investmentRepo.findInvestmentById(investmentId);
+        if (!investment) {
+            return res.status(404).json({ error: 'Investment not found' });
+        }
+
+        let { description } = req.body.value;
+        if (!description || !description.trim()) {
+          description = ' ';
+        }
+
+        investment.description = description;
+        const updateInvestment = await investmentRepo.updateDescription(investmentId, description);
+        res.json({
+          userId : updateInvestment.userId,
+          id : updateInvestment.id,
+          description : updateInvestment.description,
+          value : updateInvestment.value,
+          date  : updateInvestment.date,
+          recurrence : updateInvestment.recurrence,
+          rate : updateInvestment.rate,
+          entrance : updateInvestment.entrace,
+          recurrenceAdd : updateInvestment.recurrenceAdd,
+          monthsDuration : updateInvestment.monthsDuration
+        });
+    } catch (error){
+        res.status(500).json({ error: 'Failed to update investment', details: error });
+    }
+});
+
+/**
+ * PATCH /api/users/:userId/investments/:id/value
+ * Update investments value (protected - users can only update their own investments)
+ * Body: { value : "newValue" }
+ */
+app.patch('/api/users/:userId/investments/:id/value', authenticateToken, async (req: AuthRequest, res: Response) =>{
+    try {
+        const userId = req.params.userId;
+        if (!userId || !userId.trim()) {
+            return res.status(400).json({ error: 'Invalid user ID' });
+        }
+
+        // Users can only update their investments
+        if (req.userId !== userId) {
+            return res.status(403).json({ error: 'You can only update your own investments' });
+        }
+
+        const investmentId = Number(req.params.id);
+        if (isNaN(investmentId)) {
+            return res.status(400).json({ error: 'Invalid investment ID' });
+        }
+
+        const investment = await investmentRepo.findInvestmentById(investmentId);
+        if (!investment) {
+            return res.status(404).json({ error: 'Investment not found' });
+        }
+
+        const { value } = req.body.value;
+        if (!value || !value.trim()) {
+          return res.status(400).json({ error: 'Value is required' });
+        }
+
+        const valueNumber = Number(value);
+        if(isNaN(valueNumber)){
+          return res.status(400).json({ error: 'Invalid Value' });
+        }
+
+        investment.value = valueNumber;
+        const updateInvestment = await investmentRepo.updateValue(investmentId, valueNumber);
+        res.json({
+          userId : updateInvestment.userId,
+          id : updateInvestment.id,
+          description : updateInvestment.description,
+          value : updateInvestment.value,
+          date  : updateInvestment.date,
+          recurrence : updateInvestment.recurrence,
+          rate : updateInvestment.rate,
+          entrance : updateInvestment.entrace,
+          recurrenceAdd : updateInvestment.recurrenceAdd,
+          monthsDuration : updateInvestment.monthsDuration
+        });
+    } catch (error){
+        res.status(500).json({ error: 'Failed to update investment', details: error });
+    }
+});
+
+/**
+ * PATCH /api/users/:userId/investments/:id/date
+ * Update investment date (protected - users can only update their own investments)
+ * Body: { date : "newDate" }
+ */
+app.patch('/api/users/:userId/investments/:id/date', authenticateToken, async (req: AuthRequest, res: Response) =>{
+    try {
+        const userId = req.params.userId;
+        if (!userId || !userId.trim()) {
+            return res.status(400).json({ error: 'Invalid user ID' });
+        }
+
+        // Users can only update their investment
+        if (req.userId !== userId) {
+            return res.status(403).json({ error: 'You can only update your own investment' });
+        }
+
+        const investmentId = Number(req.params.id);
+        if (isNaN(investmentId)) {
+            return res.status(400).json({ error: 'Invalid investment ID' });
+        }
+
+        const investment = await investmentRepo.findInvestmentById(investmentId);
+        if (!investment) {
+            return res.status(404).json({ error: 'Investment not found' });
+        }
+
+        const { date } = req.body.date;
+        if (!date || !date.trim()) {
+          return res.status(400).json({ error: 'Date is required' });
+        }
+
+        const dateObj = new Date(date);
+        if(isNaN(dateObj.getTime())){
+          return res.status(400).json({ error: 'Invalid date format' });
+        }
+
+        investment.date = dateObj;
+        const updateInvestment = await investmentRepo.updateDate(investmentId, dateObj);
+        res.json({
+          userId : updateInvestment.userId,
+          id : updateInvestment.id,
+          description : updateInvestment.description,
+          value : updateInvestment.value,
+          date  : updateInvestment.date,
+          recurrence : updateInvestment.recurrence,
+          rate : updateInvestment.rate,
+          entrance : updateInvestment.entrace,
+          recurrenceAdd : updateInvestment.recurrenceAdd,
+          monthsDuration : updateInvestment.monthsDuration
+        });
+    } catch (error){
+        res.status(500).json({ error: 'Failed to update investment', details: error });
+    }
+});
+
+/**
+ * PATCH /api/users/:userId/investments/:id/recurrence
+ * Update investments date (protected - users can only update their own investments)
+ * Body: { recurrence : "newRecurrence" }
+ */
+app.patch('/api/users/:userId/investments/:id/recurrence', authenticateToken, async (req: AuthRequest, res: Response) =>{
+    try {
+        const userId = req.params.userId;
+        if (!userId || !userId.trim()) {
+            return res.status(400).json({ error: 'Invalid user ID' });
+        }
+
+        // Users can only update their investments
+        if (req.userId !== userId) {
+            return res.status(403).json({ error: 'You can only update your own investments' });
+        }
+
+        const investmentId = Number(req.params.id);
+        if (isNaN(investmentId)) {
+            return res.status(400).json({ error: 'Invalid investments ID' });
+        }
+
+        const investments = await investmentRepo.findInvestmentById(investmentId);
+        if (!investments) {
+            return res.status(404).json({ error: 'Investment not found' });
+        }
+
+        const { recurrence } = req.body.recurrence;
+        if(!recurrence || !recurrence.trim()){
+          return res.status(400).json({ error: 'Recurrence is required' });
+        }
+
+        let recurrenceBool: boolean;
+
+        if (recurrence === "true" || recurrence === true) {
+          recurrenceBool = true;
+        } else if (recurrence === "false" || recurrence === false) {
+          recurrenceBool = false;
+        } else {
+          recurrenceBool = false;
+        }
+
+        investments.recurrence = recurrenceBool;
+        const updateInvestment = await investmentRepo.updateRecurrence(investmentId, recurrenceBool);
+        res.json({
+          userId : updateInvestment.userId,
+          id : updateInvestment.id,
+          description : updateInvestment.description,
+          value : updateInvestment.value,
+          date  : updateInvestment.date,
+          recurrence : updateInvestment.recurrence,
+          rate : updateInvestment.rate,
+          entrance : updateInvestment.entrace,
+          recurrenceAdd : updateInvestment.recurrenceAdd,
+          monthsDuration : updateInvestment.monthsDuration
+        });
+    } catch (error){
+        res.status(500).json({ error: 'Failed to update investment', details: error });
+    }
+});
+
+/**
+ * PATCH /api/users/:userId/investments/:id/rate
+ * Update investments rate (protected - users can only update their own investments)
+ * Body: { rate : "newRate" }
+ */
+app.patch('/api/users/:userId/investments/:id/rate', authenticateToken, async (req: AuthRequest, res: Response) =>{
+    try {
+        const userId = req.params.userId;
+        if (!userId || !userId.trim()) {
+            return res.status(400).json({ error: 'Invalid user ID' });
+        }
+
+        // Users can only update their investments
+        if (req.userId !== userId) {
+            return res.status(403).json({ error: 'You can only update your own investments' });
+        }
+
+        const investmentId = Number(req.params.id);
+        if (isNaN(investmentId)) {
+            return res.status(400).json({ error: 'Invalid investment ID' });
+        }
+
+        const investment = await investmentRepo.findInvestmentById(investmentId);
+        if (!investment) {
+            return res.status(404).json({ error: 'Investment not found' });
+        }
+
+        const { rate } = req.body.rate;
+        if (!rate || !rate.trim()) {
+          return res.status(400).json({ error: 'Rate is required' });
+        }
+
+        const rateNumber = Number(rate);
+        if(isNaN(rateNumber)){
+          return res.status(400).json({ error: 'Invalid rate' });
+        }
+
+        investment.rate = rateNumber;
+        const updateInvestment = await investmentRepo.updateRate(investmentId, rateNumber);
+        res.json({
+          userId : updateInvestment.userId,
+          id : updateInvestment.id,
+          description : updateInvestment.description,
+          value : updateInvestment.value,
+          date  : updateInvestment.date,
+          recurrence : updateInvestment.recurrence,
+          rate : updateInvestment.rate,
+          entrance : updateInvestment.entrace,
+          recurrenceAdd : updateInvestment.recurrenceAdd,
+          monthsDuration : updateInvestment.monthsDuration
+        });
+    } catch (error){
+        res.status(500).json({ error: 'Failed to update investment', details: error });
+    }
+});
+
+/**
+ * PATCH /api/users/:userId/investments/:id/recurrenceAdd
+ * Update investments recurrenceAdd (protected - users can only update their own investments)
+ * Body: { recurrenceAdd : "newRecurrenceAdd" }
+ */
+app.patch('/api/users/:userId/investments/:id/recurrenceAdd', authenticateToken, async (req: AuthRequest, res: Response) =>{
+    try {
+        const userId = req.params.userId;
+        if (!userId || !userId.trim()) {
+            return res.status(400).json({ error: 'Invalid user ID' });
+        }
+
+        // Users can only update their investments
+        if (req.userId !== userId) {
+            return res.status(403).json({ error: 'You can only update your own investments' });
+        }
+
+        const investmentId = Number(req.params.id);
+        if (isNaN(investmentId)) {
+            return res.status(400).json({ error: 'Invalid investment ID' });
+        }
+
+        const investment = await investmentRepo.findInvestmentById(investmentId);
+        if (!investment) {
+            return res.status(404).json({ error: 'Investment not found' });
+        }
+
+        const { recurrenceAdd } = req.body.recurrenceAdd;
+        if (!recurrenceAdd || !recurrenceAdd.trim()) {
+          return res.status(400).json({ error: 'Recurrence Addition is required' });
+        }
+
+        const recurrenceAddNumber = Number(recurrenceAdd);
+        if(isNaN(recurrenceAddNumber)){
+          return res.status(400).json({ error: 'Invalid rate' });
+        }
+
+        investment.recurrenceAdd = recurrenceAddNumber;
+        const updateInvestment = await investmentRepo.updateRecurrenceAdd(investmentId, recurrenceAddNumber);
+        res.json({
+          userId : updateInvestment.userId,
+          id : updateInvestment.id,
+          description : updateInvestment.description,
+          value : updateInvestment.value,
+          date  : updateInvestment.date,
+          recurrence : updateInvestment.recurrence,
+          rate : updateInvestment.rate,
+          entrance : updateInvestment.entrace,
+          recurrenceAdd : updateInvestment.recurrenceAdd,
+          monthsDuration : updateInvestment.monthsDuration
+        });
+    } catch (error){
+        res.status(500).json({ error: 'Failed to update investment', details: error });
+    }
+});
+
+/**
+ * PATCH /api/users/:userId/investments/:id/monthsDuration
+ * Update investments monthsDuration (protected - users can only update their own investments)
+ * Body: { monthsDuration : "newMonthsDuration" }
+ */
+app.patch('/api/users/:userId/investments/:id/monthsDuration', authenticateToken, async (req: AuthRequest, res: Response) =>{
+    try {
+        const userId = req.params.userId;
+        if (!userId || !userId.trim()) {
+            return res.status(400).json({ error: 'Invalid user ID' });
+        }
+
+        // Users can only update their investments
+        if (req.userId !== userId) {
+            return res.status(403).json({ error: 'You can only update your own investments' });
+        }
+
+        const investmentId = Number(req.params.id);
+        if (isNaN(investmentId)) {
+            return res.status(400).json({ error: 'Invalid investment ID' });
+        }
+
+        const investment = await investmentRepo.findInvestmentById(investmentId);
+        if (!investment) {
+            return res.status(404).json({ error: 'Investment not found' });
+        }
+
+        const { monthsDuration } = req.body.monthsDuration;
+        if (!monthsDuration || !monthsDuration.trim()) {
+          return res.status(400).json({ error: 'A new months duration is required' });
+        }
+
+        const monthsDurationNumber = Number(monthsDuration);
+        if(isNaN(monthsDurationNumber)){
+          return res.status(400).json({ error: 'Invalid months duration' });
+        }
+
+        investment.monthsDuration = monthsDurationNumber;
+        const updateInvestment = await investmentRepo.updateRate(investmentId, monthsDurationNumber);
+        res.json({
+          userId : updateInvestment.userId,
+          id : updateInvestment.id,
+          description : updateInvestment.description,
+          value : updateInvestment.value,
+          date  : updateInvestment.date,
+          recurrence : updateInvestment.recurrence,
+          rate : updateInvestment.rate,
+          entrance : updateInvestment.entrace,
+          recurrenceAdd : updateInvestment.recurrenceAdd,
+          monthsDuration : updateInvestment.monthsDuration
+        });
+    } catch (error){
+        res.status(500).json({ error: 'Failed to update investment', details: error });
+    }
+});
+
+/**
+ * DELETE /api/users/:userId/investments/:id
+ * Delete a user investment (protected - users can only delete their own investments)
+ */
+app.delete('/api/users/:userId/investments/:id', authenticateToken, async (req: AuthRequest, res: Response) =>{
+    try {
+        const userId = req.params.userId;
+        if (!userId || !userId.trim()) {
+            return res.status(400).json({ error: 'Invalid user ID' });
+        }
+
+        // Users can only delete their own investments
+        if (req.userId !== userId) {
+            return res.status(403).json({ error: 'You can only delete your own investments' });
+        }
+
+        const user = await userRepo.findUserById(userId);
+        if (!user) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+
+        const investmentId = Number(req.params.id);
+        if (isNaN(investmentId)) {
+            return res.status(400).json({ error: 'Invalid investment ID' });
+        }
+
+        const investment = await investmentRepo.findInvestmentById(investmentId);
+        if (!investment) {
+            return res.status(404).json({ error: 'Investment not found' });
+        }
+        
+        await investmentRepo.delete(investmentId);
+        res.json({ message: 'Investment deleted successfully' });
+    } catch (error){
+        res.status(500).json({ error: 'Failed to delete investment', details: error });
     }
 });
 
@@ -1061,11 +1839,28 @@ app.get('/', (req: Request, res: Response) => {
         'GET /api/users/userId/transaction/:id': 'Get a transaction by ID (protected)',
         'GET /api/users/:userId/transactions': 'Get all transactions for a specific user (protected)',
         'GET /api/users/:userId/transactions/byDate': 'Get all transactions of date a period (protected)',
+        'PATCH /api/users/:userId/transactions/:id/description': 'Update transaction description ( Body: {description}) (protected)',
         'PATCH /api/users/:userId/transactions/:id/value': 'Update transaction value ( Body: {value}) (protected)',
         'PATCH /api/users/:userId/category/:id/date': 'Update transaction date ( Body: {date}) (protected)',
         'PATCH /api/users/:userId/category/:categoryId/transactions/:id/': 'Update transaction category (protected)',
         'PATCH /api/users/:userId/transactions/:id/recurrence': 'Update transaction recurrence ( Body: {recurrence}) (protected)',
         'DELETE /api/users/:userId/transactions/:id': 'Delete a user transaction (protected)'
+      },
+      investments: {
+        'POST /api/users/:userId/categories/:categoryId/investments': 'Create a new investment (protected)',
+        'GET /api/users/userId/investments/:id': 'Get a investment by ID (protected)',
+        'GET /api/users/:userId/investments': 'Get all investments for a specific user (protected)',
+        'GET /api/users/userId/investments/:id/gain': 'Get the total gain of a investment in the end of months duration',
+        'GET /api/users/userId/investments/:id/nowGain': 'Get gain until now of a investment in the end of months duration',
+        'GET /api/users/userId/investments/:id/gain/:date': 'Get the total gain of a investment at a specific date',
+        'PATCH /api/users/:userId/investments/:id/description': 'Update investment description ( Body: {description}) (protected)',
+        'PATCH /api/users/:userId/investments/:id/value': 'Update investment value ( Body: {value}) (protected)',
+        'PATCH /api/users/:userId/investments/:id/date': 'Update investment date ( Body: {date}) (protected)',
+        'PATCH /api/users/:userId/investments/:id/recurrence': 'Update investment recurrence (protected)',
+        'PATCH /api/users/:userId/investments/:id/rate': 'Update investment rate (protected)',
+        'PATCH /api/users/:userId/investments/:id/recurrenceAdd': 'Update investment recurrenceAdd (protected)',
+        'PATCH /api/users/:userId/investments/:id/monthsDuration': 'Update investment monthsDuration (protected)',
+        'DELETE /api/users/:userId/investments/:id': 'Delete a user investment (protected)'
       }
     }
   });

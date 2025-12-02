@@ -15,6 +15,7 @@ model User {
   
   transactionCategories TransactionCategory[]
   transactions Transaction[]
+  investments Investment[]
 }
 
 enum TransactionType {
@@ -29,6 +30,7 @@ model TransactionCategory {
   type         TransactionType
 
   transactions Transaction[]
+  investments  Investment[]
 
   userId       String
   user         User      @relation(fields: [userId], references: [id])
@@ -36,9 +38,29 @@ model TransactionCategory {
 
 model Transaction {
   id           Int       @id @default(autoincrement())
+  description  String?
   value        Float     
   date         DateTime
   recurrence   Boolean
+
+  categoryId   Int
+  category     TransactionCategory @relation(fields: [categoryId], references :[id])
+
+  userId       String
+  user         User @relation(fields: [userId], references: [id])
+}
+
+model Investment {
+  id           Int       @id @default(autoincrement())
+  description  String?
+  value        Float     
+  date         DateTime
+  recurrence   Boolean
+  
+  rate           Float
+  entrace        Float
+  recurrenceAdd  Float
+  monthsDuration Int
 
   categoryId   Int
   category     TransactionCategory @relation(fields: [categoryId], references :[id])

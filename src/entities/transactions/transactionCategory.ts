@@ -1,8 +1,4 @@
-export enum TransactionTypeClass {
-  COST = "COST",
-  GAIN = "GAIN",
-  INVESTMENT = "INVESTMENT"
-}
+import { TransactionTypeClass } from "../transactionTypeClass";
 
 export class TransactionCategory {
     public id: number = -1;
