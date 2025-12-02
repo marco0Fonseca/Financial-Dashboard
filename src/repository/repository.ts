@@ -148,6 +148,8 @@ export class TransactionCategoryRepository {
     categoryData.forEach(cd =>{
       const typeClass =  TransactionTypeClass[cd.type as keyof typeof TransactionTypeClass];
       const category = new TransactionCategory(cd.label,typeClass,cd.userId);
+      category.id = cd.id;
+
       categories.push(category);
     });
 
@@ -157,7 +159,7 @@ export class TransactionCategoryRepository {
   async findCategoryByLabel(userId : string, label : string){
     const categoryData = await prisma.transactionCategory.findFirst({
       where: { userId : userId,
-               label: label }
+              label: label }
     })
 
     if(!categoryData) return null;
@@ -254,7 +256,7 @@ export class TransactionRepository {
         td.recurrence,
         td.userId
       );
-
+      transaction.id = td.id;
       transactions.push(transaction);
     }
 
@@ -286,7 +288,7 @@ export class TransactionRepository {
         td.recurrence,
         td.userId
       );
-
+      transaction.id = td.id;
       transactions.push(transaction);
     }
 
@@ -318,7 +320,7 @@ export class TransactionRepository {
         td.recurrence,
         td.userId
       );
-
+      transaction.id = td.id;
       transactions.push(transaction);
     }
 
@@ -376,7 +378,6 @@ export class InvestmentRepository {
         date : investment.date,
         recurrence : investment.recurrence,
         rate : investment.rate,
-        entrace : investment.entrance,
         recurrenceAdd : investment.recurrenceAdd,
         monthsDuration : investment.monthsDuration,
         categoryId : investment.category.id,
@@ -398,14 +399,14 @@ export class InvestmentRepository {
 
     const category = await categoryRepo.findCategoryById(investmentData.categoryId);
 
-    const investment = await Investment.create(
+    const investment = new Investment(
       investmentData.description ?? undefined,
+      category!,
       investmentData.value,
       investmentData.date,
       investmentData.recurrence,
       investmentData.userId,
       investmentData.rate,
-      investmentData.entrace,
       investmentData.recurrenceAdd,
       investmentData.monthsDuration
     );
@@ -425,18 +426,18 @@ export class InvestmentRepository {
     const category = await categoryRepo.findCategoryByLabel( userId,'Investment');
     for (const ivd of investmentData) {
       
-      const investment = await Investment.create(
+      const investment = new Investment(
         ivd.description ?? undefined,
+        category!,
         ivd.value,
         ivd.date,
         ivd.recurrence,
         ivd.userId,
         ivd.rate,
-        ivd.entrace,
         ivd.recurrenceAdd,
         ivd.monthsDuration
       );
-
+      investment.id = ivd.id;
       investments.push(investment);
     }
 

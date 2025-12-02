@@ -58,7 +58,6 @@ model Investment {
   recurrence   Boolean
   
   rate           Float
-  entrace        Float
   recurrenceAdd  Float
   monthsDuration Int
 

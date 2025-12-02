@@ -371,7 +371,7 @@ app.post('/api/users/:userId/categories', authenticateToken, async (req: AuthReq
  * GET /api/users/userId/category/:id
  * Get a category by ID (protected - users can only access their own categories)
  */
-app.get('/api/users/userId/category/:id', authenticateToken, async (req: AuthRequest, res: Response) => {
+app.get('/api/users/:userId/categories/:id', authenticateToken, async (req: AuthRequest, res: Response) => {
     try{
         const userId = req.params.userId;
         if (!userId || !userId.trim()) {
@@ -433,11 +433,11 @@ app.get('/api/users/:userId/categories', authenticateToken, async (req: AuthRequ
 });
 
 /**
- * PATCH /api/users/:userId/category/:id/label
+ * PATCH /api/users/:userId/categories/:id/label
  * Update category label (protected - users can only update their own categories)
  * Body: { label : "newLabel" }
  */
-app.patch('/api/users/:userId/category/:id/label', authenticateToken, async (req: AuthRequest, res: Response) =>{
+app.patch('/api/users/:userId/categories/:id/label', authenticateToken, async (req: AuthRequest, res: Response) =>{
     try {
         const userId = req.params.userId;
         if (!userId || !userId.trim()) {
@@ -479,11 +479,11 @@ app.patch('/api/users/:userId/category/:id/label', authenticateToken, async (req
 });
 
 /**
- * PATCH /api/users/:userId/category/:id/type
+ * PATCH /api/users/:userId/categories/:id/type
  * Update category type (protected - users can only update their own categories)
  * Body: { type : "newType" }
  */
-app.patch('/api/users/:userId/category/:id/type', authenticateToken, async (req: AuthRequest, res: Response) =>{
+app.patch('/api/users/:userId/categories/:id/type', authenticateToken, async (req: AuthRequest, res: Response) =>{
     try {
         const userId = req.params.userId;
         if (!userId || !userId.trim()) {
@@ -526,10 +526,10 @@ app.patch('/api/users/:userId/category/:id/type', authenticateToken, async (req:
 });
 
 /**
- * DELETE /api/users/:userId/category/:id
+ * DELETE /api/users/:userId/categories/:id
  * Delete a user category (protected - users can only delete their own categories)
  */
-app.delete('/api/users/:userId/category/:id', authenticateToken, async (req: AuthRequest, res: Response) =>{
+app.delete('/api/users/:userId/categories/:id', authenticateToken, async (req: AuthRequest, res: Response) =>{
     try {
         const userId = req.params.userId;
         if (!userId || !userId.trim()) {
@@ -587,7 +587,7 @@ app.post('/api/users/:userId/categories/:categoryId/transactions', authenticateT
       return res.status(404).json({ error: 'User not found' });
     }
 
-    const categoryId = Number(req.params.id);
+    const categoryId = Number(req.params.categoryId);
     if (isNaN(categoryId)) {
         return res.status(400).json({ error: 'Invalid category ID' });
     }
@@ -599,7 +599,7 @@ app.post('/api/users/:userId/categories/:categoryId/transactions', authenticateT
     
     const { description, value, date, recurrence } = req.body;
 
-    if (!value || !value.trim()) {
+    if (!value) {
       return res.status(400).json({ error: 'Value is required' });
     }
     const valueNumber = Number(value);
@@ -607,12 +607,12 @@ app.post('/api/users/:userId/categories/:categoryId/transactions', authenticateT
       return res.status(400).json({ error: 'Invalid value' });
     }
 
-    if (!date || !date.trim()) {
+    if (!date) {
       return res.status(400).json({ error: 'Date is required' });
     }
     const dateObj = new Date(date);
     if (isNaN(dateObj.getTime())) {
-      return res.status(400).json({ error: "Invalid date format" });
+      return res.status(400).json({ error: 'Invalid date format' });
     }
 
     let recurrenceBool: boolean;
@@ -642,10 +642,10 @@ app.post('/api/users/:userId/categories/:categoryId/transactions', authenticateT
 });
 
 /**
- * GET /api/users/userId/transaction/:id
+ * GET /api/users/userId/transactions/:id
  * Get a transaction by ID (protected - users can only access their own transactions)
  */
-app.get('/api/users/userId/transaction/:id', authenticateToken, async (req: AuthRequest, res: Response) => {
+app.get('/api/users/userId/transactions/:id', authenticateToken, async (req: AuthRequest, res: Response) => {
     try{
         const userId = req.params.userId;
         if (!userId || !userId.trim()) {
@@ -906,12 +906,11 @@ app.patch('/api/users/:userId/transactions/:id/date', authenticateToken, async (
         }
 
         const { date } = req.body.date;
-        if (!date || !date.trim()) {
+        if (!date) {
           return res.status(400).json({ error: 'Date is required' });
         }
-
         const dateObj = new Date(date);
-        if(isNaN(dateObj.getTime())){
+        if (isNaN(dateObj.getTime())) {
           return res.status(400).json({ error: 'Invalid date format' });
         }
 
@@ -931,10 +930,10 @@ app.patch('/api/users/:userId/transactions/:id/date', authenticateToken, async (
 });
 
 /**
- * PATCH /api/users/:userId/category/:categoryId/transactions/:id
+ * PATCH /api/users/:userId/categories/:categoryId/transactions/:id
  * Update transaction category (protected - users can only update their own transactions)
  */
-app.patch('/api/users/:userId/category/:categoryId/transactions/:id', authenticateToken, async (req: AuthRequest, res: Response) =>{
+app.patch('/api/users/:userId/categories/:categoryId/transactions/:id', authenticateToken, async (req: AuthRequest, res: Response) =>{
     try {
         const userId = req.params.userId;
         if (!userId || !userId.trim()) {
@@ -1008,20 +1007,12 @@ app.patch('/api/users/:userId/transactions/:id/recurrence', authenticateToken, a
             return res.status(404).json({ error: 'Transaction not found' });
         }
 
-        const { recurrence } = req.body.recurrence;
-        if(!recurrence || !recurrence.trim()){
+        const { recurrence } = req.body;
+
+        if (recurrence === undefined || recurrence === null) {
           return res.status(400).json({ error: 'Recurrence is required' });
         }
-
-        let recurrenceBool: boolean;
-
-        if (recurrence === "true" || recurrence === true) {
-          recurrenceBool = true;
-        } else if (recurrence === "false" || recurrence === false) {
-          recurrenceBool = false;
-        } else {
-          recurrenceBool = false;
-        }
+        const recurrenceBool = recurrence === true || recurrence === "true";
 
         transaction.recurrence = recurrenceBool;
         const updateTrasaction = await transactionRepo.updateRecurrence(transactionId, recurrenceBool);
@@ -1079,11 +1070,11 @@ app.delete('/api/users/:userId/transactions/:id', authenticateToken, async (req:
 // ==================== INVESTMENTS ROUTES ====================
 
 /**
- * POST /api/users/:userId/categories/:categoryId/investments
- * Create a new investments (protected - users can only create investments for themselves)
- * Body: { description : string | undefined, value : number, date : date, recurrence : boolean, rate : number, entrace : number, recurrenceAdd : number, monthsDuration : number }
+ * POST /api/users/:userId/investments
+ * Create a new investment (protected - users can only create investments for themselves)
+ * Body: { description : string | undefined, value : number, date : date, recurrence : boolean, rate : number, recurrenceAdd : number, monthsDuration : number }
  */
-app.post('/api/users/:userId/categories/:categoryId/investments', authenticateToken, async (req: AuthRequest, res: Response) => {
+app.post('/api/users/:userId/investments', authenticateToken, async (req: AuthRequest, res: Response) => {
   try {
     const userId = req.params.userId;
     if (!userId || !userId.trim()) {
@@ -1099,15 +1090,10 @@ app.post('/api/users/:userId/categories/:categoryId/investments', authenticateTo
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
-
-    const categoryId = Number(req.params.id);
-    if (isNaN(categoryId)) {
-        return res.status(400).json({ error: 'Invalid category ID' });
-    }
     
     const { description, value, date, recurrence, rate, entrance, recurrenceAdd, monthsDuration } = req.body;
 
-    if (!value || !value.trim()) {
+    if (!value) {
       return res.status(400).json({ error: 'Value is required' });
     }
     const valueNumber = Number(value);
@@ -1115,25 +1101,20 @@ app.post('/api/users/:userId/categories/:categoryId/investments', authenticateTo
       return res.status(400).json({ error: 'Invalid value' });
     }
 
-    if (!date || !date.trim()) {
+    if (!date) {
       return res.status(400).json({ error: 'Date is required' });
     }
     const dateObj = new Date(date);
     if (isNaN(dateObj.getTime())) {
-      return res.status(400).json({ error: "Invalid date format" });
+      return res.status(400).json({ error: 'Invalid date format' });
     }
 
-    let recurrenceBool: boolean;
-
-    if (recurrence === "true" || recurrence === true) {
-      recurrenceBool = true;
-    } else if (recurrence === "false" || recurrence === false) {
-      recurrenceBool = false;
-    } else {
-      recurrenceBool = false;
+    if (recurrence === undefined || recurrence === null) {
+      return res.status(400).json({ error: 'Recurrence is required' });
     }
+    const recurrenceBool = recurrence === true || recurrence === "true";
 
-    if (!rate || !rate.trim()) {
+    if (!rate) {
       return res.status(400).json({ error: 'Rate is required' });
     }
     const rateNumber = Number(rate);
@@ -1141,20 +1122,12 @@ app.post('/api/users/:userId/categories/:categoryId/investments', authenticateTo
       return res.status(400).json({ error: "Invalid rate" });
     }
 
-    if (!entrance || !entrance.trim()) {
-      return res.status(400).json({ error: 'Entrance is required' });
-    }
-    const entranceNumber = Number(entrance);
-    if (isNaN(entranceNumber)) {
-      return res.status(400).json({ error: "Invalid entrance" });
-    }
-
     let recurrenceAddNumber = Number(recurrenceAdd);
-    if (!recurrenceAdd || !recurrenceAdd.trim()) {
+    if (!recurrenceAdd) {
       recurrenceAddNumber = 0;
     }
 
-    if (!monthsDuration || !monthsDuration.trim()) {
+    if (!monthsDuration) {
       return res.status(400).json({ error: 'Months Duration is required' });
     }
     const monthsDurationNumber = Number(monthsDuration);
@@ -1162,14 +1135,25 @@ app.post('/api/users/:userId/categories/:categoryId/investments', authenticateTo
       return res.status(400).json({ error: "Invalid months duration" });
     }
 
-    const investment = await Investment.create( 
+    let category = await categoryRepo.findCategoryByLabel(userId,"Investment");
+    if(!category) {
+      category = new TransactionCategory(
+        "Investment",
+        TransactionTypeClass.INVESTMENT,
+        userId
+      );
+
+      category = await categoryRepo.create(category);
+    }
+
+    const investment = new Investment( 
       description,
+      category,
       valueNumber,
       dateObj,
       recurrenceBool,
       userId,
       rateNumber,
-      entranceNumber,
       recurrenceAddNumber,
       monthsDurationNumber
     );
@@ -1342,7 +1326,7 @@ app.get('/api/users/userId/investments/:id/gain/:date', authenticateToken, async
         }
 
         const date  = req.params.date;
-        if(!date || !date.trim()){
+        if(!date){
           return res.status(400).json({ error: 'Date is required' });
         }
         const dateObj = new Date(date);
@@ -1408,7 +1392,6 @@ app.patch('/api/users/:userId/investments/:id/description', authenticateToken, a
           date  : updateInvestment.date,
           recurrence : updateInvestment.recurrence,
           rate : updateInvestment.rate,
-          entrance : updateInvestment.entrace,
           recurrenceAdd : updateInvestment.recurrenceAdd,
           monthsDuration : updateInvestment.monthsDuration
         });
@@ -1445,7 +1428,7 @@ app.patch('/api/users/:userId/investments/:id/value', authenticateToken, async (
         }
 
         const { value } = req.body.value;
-        if (!value || !value.trim()) {
+        if (!value) {
           return res.status(400).json({ error: 'Value is required' });
         }
 
@@ -1464,7 +1447,6 @@ app.patch('/api/users/:userId/investments/:id/value', authenticateToken, async (
           date  : updateInvestment.date,
           recurrence : updateInvestment.recurrence,
           rate : updateInvestment.rate,
-          entrance : updateInvestment.entrace,
           recurrenceAdd : updateInvestment.recurrenceAdd,
           monthsDuration : updateInvestment.monthsDuration
         });
@@ -1501,10 +1483,9 @@ app.patch('/api/users/:userId/investments/:id/date', authenticateToken, async (r
         }
 
         const { date } = req.body.date;
-        if (!date || !date.trim()) {
+        if (!date) {
           return res.status(400).json({ error: 'Date is required' });
         }
-
         const dateObj = new Date(date);
         if(isNaN(dateObj.getTime())){
           return res.status(400).json({ error: 'Invalid date format' });
@@ -1520,7 +1501,6 @@ app.patch('/api/users/:userId/investments/:id/date', authenticateToken, async (r
           date  : updateInvestment.date,
           recurrence : updateInvestment.recurrence,
           rate : updateInvestment.rate,
-          entrance : updateInvestment.entrace,
           recurrenceAdd : updateInvestment.recurrenceAdd,
           monthsDuration : updateInvestment.monthsDuration
         });
@@ -1556,20 +1536,12 @@ app.patch('/api/users/:userId/investments/:id/recurrence', authenticateToken, as
             return res.status(404).json({ error: 'Investment not found' });
         }
 
-        const { recurrence } = req.body.recurrence;
-        if(!recurrence || !recurrence.trim()){
+        const { recurrence } = req.body;
+
+        if (recurrence === undefined || recurrence === null) {
           return res.status(400).json({ error: 'Recurrence is required' });
         }
-
-        let recurrenceBool: boolean;
-
-        if (recurrence === "true" || recurrence === true) {
-          recurrenceBool = true;
-        } else if (recurrence === "false" || recurrence === false) {
-          recurrenceBool = false;
-        } else {
-          recurrenceBool = false;
-        }
+        const recurrenceBool = recurrence === true || recurrence === "true";
 
         investments.recurrence = recurrenceBool;
         const updateInvestment = await investmentRepo.updateRecurrence(investmentId, recurrenceBool);
@@ -1581,7 +1553,6 @@ app.patch('/api/users/:userId/investments/:id/recurrence', authenticateToken, as
           date  : updateInvestment.date,
           recurrence : updateInvestment.recurrence,
           rate : updateInvestment.rate,
-          entrance : updateInvestment.entrace,
           recurrenceAdd : updateInvestment.recurrenceAdd,
           monthsDuration : updateInvestment.monthsDuration
         });
@@ -1618,10 +1589,9 @@ app.patch('/api/users/:userId/investments/:id/rate', authenticateToken, async (r
         }
 
         const { rate } = req.body.rate;
-        if (!rate || !rate.trim()) {
+        if (!rate) {
           return res.status(400).json({ error: 'Rate is required' });
         }
-
         const rateNumber = Number(rate);
         if(isNaN(rateNumber)){
           return res.status(400).json({ error: 'Invalid rate' });
@@ -1637,7 +1607,6 @@ app.patch('/api/users/:userId/investments/:id/rate', authenticateToken, async (r
           date  : updateInvestment.date,
           recurrence : updateInvestment.recurrence,
           rate : updateInvestment.rate,
-          entrance : updateInvestment.entrace,
           recurrenceAdd : updateInvestment.recurrenceAdd,
           monthsDuration : updateInvestment.monthsDuration
         });
@@ -1674,13 +1643,12 @@ app.patch('/api/users/:userId/investments/:id/recurrenceAdd', authenticateToken,
         }
 
         const { recurrenceAdd } = req.body.recurrenceAdd;
-        if (!recurrenceAdd || !recurrenceAdd.trim()) {
+        if (!recurrenceAdd) {
           return res.status(400).json({ error: 'Recurrence Addition is required' });
         }
-
         const recurrenceAddNumber = Number(recurrenceAdd);
         if(isNaN(recurrenceAddNumber)){
-          return res.status(400).json({ error: 'Invalid rate' });
+          return res.status(400).json({ error: 'Invalid recurrence addition' });
         }
 
         investment.recurrenceAdd = recurrenceAddNumber;
@@ -1693,7 +1661,6 @@ app.patch('/api/users/:userId/investments/:id/recurrenceAdd', authenticateToken,
           date  : updateInvestment.date,
           recurrence : updateInvestment.recurrence,
           rate : updateInvestment.rate,
-          entrance : updateInvestment.entrace,
           recurrenceAdd : updateInvestment.recurrenceAdd,
           monthsDuration : updateInvestment.monthsDuration
         });
@@ -1730,10 +1697,9 @@ app.patch('/api/users/:userId/investments/:id/monthsDuration', authenticateToken
         }
 
         const { monthsDuration } = req.body.monthsDuration;
-        if (!monthsDuration || !monthsDuration.trim()) {
+        if (!monthsDuration) {
           return res.status(400).json({ error: 'A new months duration is required' });
         }
-
         const monthsDurationNumber = Number(monthsDuration);
         if(isNaN(monthsDurationNumber)){
           return res.status(400).json({ error: 'Invalid months duration' });
@@ -1749,7 +1715,6 @@ app.patch('/api/users/:userId/investments/:id/monthsDuration', authenticateToken
           date  : updateInvestment.date,
           recurrence : updateInvestment.recurrence,
           rate : updateInvestment.rate,
-          entrance : updateInvestment.entrace,
           recurrenceAdd : updateInvestment.recurrenceAdd,
           monthsDuration : updateInvestment.monthsDuration
         });
@@ -1828,11 +1793,11 @@ app.get('/', (req: Request, res: Response) => {
       },
       categories: {
         'POST /api/users/:userId/categories': 'Create a new transaction category (protected)',
-        'GET /api/users/userId/category/:id': 'Get a category by ID (protected)',
+        'GET /api/users/:userId/categories/:id': 'Get a category by ID (protected)',
         'GET /api/users/:userId/categories': 'Get all categories for a specific user (protected)',
-        'PATCH /api/users/:userId/category/:id/label': 'Update category label ( Body: {label}) (protected)',
-        'PATCH /api/users/:userId/category/:id/type': 'Update category type ( Body: {type}) (protected)',
-        'DELETE /api/users/:userId/category/:id': 'Delete a user category (protected)'
+        'PATCH /api/users/:userId/categories/:id/label': 'Update category label ( Body: {label}) (protected)',
+        'PATCH /api/users/:userId/categories/:id/type': 'Update category type ( Body: {type}) (protected)',
+        'DELETE /api/users/:userId/categories/:id': 'Delete a user category (protected)'
       },
       transactions: {
         'POST /api/users/:userId/categories/:categoryId/transactions': 'Create a new transaction (protected)',
@@ -1841,13 +1806,13 @@ app.get('/', (req: Request, res: Response) => {
         'GET /api/users/:userId/transactions/byDate': 'Get all transactions of date a period (protected)',
         'PATCH /api/users/:userId/transactions/:id/description': 'Update transaction description ( Body: {description}) (protected)',
         'PATCH /api/users/:userId/transactions/:id/value': 'Update transaction value ( Body: {value}) (protected)',
-        'PATCH /api/users/:userId/category/:id/date': 'Update transaction date ( Body: {date}) (protected)',
-        'PATCH /api/users/:userId/category/:categoryId/transactions/:id/': 'Update transaction category (protected)',
+        'PATCH /api/users/:userId/transactions/:id/date': 'Update transaction date ( Body: {date}) (protected)',
+        'PATCH /api/users/:userId/categories/:categoryId/transactions/:id/': 'Update transaction category (protected)',
         'PATCH /api/users/:userId/transactions/:id/recurrence': 'Update transaction recurrence ( Body: {recurrence}) (protected)',
         'DELETE /api/users/:userId/transactions/:id': 'Delete a user transaction (protected)'
       },
       investments: {
-        'POST /api/users/:userId/categories/:categoryId/investments': 'Create a new investment (protected)',
+        'POST /api/users/:userId/investments': 'Create a new investment (protected)',
         'GET /api/users/userId/investments/:id': 'Get a investment by ID (protected)',
         'GET /api/users/:userId/investments': 'Get all investments for a specific user (protected)',
         'GET /api/users/userId/investments/:id/gain': 'Get the total gain of a investment in the end of months duration',
