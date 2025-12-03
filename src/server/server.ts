@@ -10,7 +10,7 @@ import { Transaction } from '../entities/transactions/transaction';
 import { Investment } from '../entities/investment/investment';
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = 5000;
 
 // Middleware
 app.use(cors());
@@ -1767,8 +1767,8 @@ app.delete('/api/users/:userId/investments/:id', authenticateToken, async (req: 
  * GET /
  * API welcome message
  */
-app.get('/', (req: Request, res: Response) => {
-  res.json({
+
+const data = {
     message: 'Financial Dashboard API',
     version: '2.0.0',
     authentication: {
@@ -1828,7 +1828,22 @@ app.get('/', (req: Request, res: Response) => {
         'DELETE /api/users/:userId/investments/:id': 'Delete a user investment (protected)'
       }
     }
-  });
+  };
+
+app.get('/', (req: Request, res: Response) => {
+  res.send(`
+    <!DOCTYPE html>
+    <html lang="pt-BR">
+      <head>
+        <meta charset="UTF-8">
+        <title>fd_Server</title>
+      </head>
+      <body>
+        <h1>Financial Dashboard API</h1>
+        <pre>${JSON.stringify(data, null, 2)}</pre>
+      </body>
+    </html>
+  `);
 });
 
 // Start the server

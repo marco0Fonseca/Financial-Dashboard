@@ -10,7 +10,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
   const [confirmSenha, setConfirmSenha] = useState('');
   const [isCadastro, setIsCadastro] = useState(false);
   const [nome, setNome] = useState('');
-  const API_URL = 'http://localhost:3001/api/auth';
+  const API_URL = 'http://localhost:5000/api/auth';
   
 
   const isSenhaIgual = !isCadastro || senha === confirmSenha;
@@ -44,11 +44,18 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password: senha }),
       });
+
+      const data = await response.json();
+
       if (response.ok) {
+        localStorage.setItem('userId', data.user.id);
+        localStorage.setItem("authToken", data.token);
         onLogin(email);
-      } else {
-        // Trate erro de login aqui
-        alert('Erro ao fazer login');
+      } else if (response.status === 401) {
+        alert(data.error);
+      }
+      else {
+        alert('Erro ao fazer login: Email ou senha inválidos');
       }
     }
   };

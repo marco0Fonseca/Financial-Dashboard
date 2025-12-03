@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import Login from './components/Login.tsx';
-import PurchaseForm from './components/PurchaseForm.tsx';
+import PurchaseForm, { TransactionTypeClass } from './components/PurchaseForm.tsx';
 import PurchaseList from './components/PurchaseList.tsx';
 import Dashboard from './components/Dashboard.tsx';
 import Sidebar from './components/Sidebar.tsx';
@@ -14,7 +14,7 @@ export interface Purchase {
   amount: string;
   category: string;
   isRecurring: boolean;
-  type: 'gasto' | 'ganho';
+  type: TransactionTypeClass.COST | TransactionTypeClass.GAIN;
   date?: string;
 }
 
@@ -68,9 +68,9 @@ function App() {
     case 'investimentos':
       content = <Investimentos />;
       break;
-    case 'dividas':
-      content = <Dividas />;
-      break;
+    // case 'dividas':
+    //   content = <Dividas />;
+    //   break;
     default:
       content = null;
   }
