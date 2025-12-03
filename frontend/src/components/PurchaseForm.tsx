@@ -154,17 +154,17 @@ function PurchaseForm({ onAddPurchase, onCategoryCreated, userId, token, categor
       <div className="pf-grid">
         <label className="pf-field">
           <span className="pf-label">Descrição</span>
-          <input type="text" value={description} onChange={(e) => setDescription(e.target.value)} required placeholder="Ex: Mercado" />
+          <input type="text" value={description} onChange={(e) => setDescription(e.target.value)} required placeholder="Ex: Carne" />
         </label>
 
         <label className="pf-field">
           <span className="pf-label">Valor</span>
-          <input type="number" value={amount} onChange={(e) => setAmount(e.target.value)} required step="0.01" min="0.01" placeholder="0.00" />
+          <input type="number" value={amount} onChange={(e) => setAmount(e.target.value)} required step="0.01" min="0.01" placeholder="R$0.00" />
         </label>
 
         <label className="pf-field">
           <span className="pf-label">Categoria</span>
-          <input type="text" value={category} onChange={(e) => setCategory(e.target.value)} required placeholder="Digite para criar" list="category-suggestions" />
+          <input type="text" value={category} onChange={(e) => setCategory(e.target.value)} required placeholder="Ex: Mercado" list="category-suggestions" />
           <datalist id="category-suggestions">
             {categories.map((cat) => <option key={cat.id} value={cat.name} />)}
           </datalist>
