@@ -1169,7 +1169,7 @@ app.post('/api/users/:userId/investments', authenticateToken, async (req: AuthRe
  * GET /api/users/userId/investments/:id
  * Get a investment by ID (protected - users can only access their own investments)
  */
-app.get('/api/users/userId/investments/:id', authenticateToken, async (req: AuthRequest, res: Response) => {
+app.get('/api/users/:userId/investments/:id', authenticateToken, async (req: AuthRequest, res: Response) => {
     try{
         const userId = req.params.userId;
         if (!userId || !userId.trim()) {
@@ -1234,7 +1234,7 @@ app.get('/api/users/:userId/investments', authenticateToken, async (req: AuthReq
  * GET /api/users/userId/investments/:id/gain
  * Get the total gain of a investment in the end of months duration (protected - users can only access their own investments)
  */
-app.get('/api/users/userId/investments/:id/gain', authenticateToken, async (req: AuthRequest, res: Response) => {
+app.get('/api/users/:userId/investments/:id/gain', authenticateToken, async (req: AuthRequest, res: Response) => {
     try{
         const userId = req.params.userId;
         if (!userId || !userId.trim()) {
@@ -1271,7 +1271,7 @@ app.get('/api/users/userId/investments/:id/gain', authenticateToken, async (req:
  * GET /api/users/userId/investments/:id/nowGain
  * Get gain until now of a investment in the end of months duration (protected - users can only access their own investments)
  */
-app.get('/api/users/userId/investments/:id/nowGain', authenticateToken, async (req: AuthRequest, res: Response) => {
+app.get('/api/users/:userId/investments/:id/nowGain', authenticateToken, async (req: AuthRequest, res: Response) => {
     try{
         const userId = req.params.userId;
         if (!userId || !userId.trim()) {
@@ -1308,7 +1308,7 @@ app.get('/api/users/userId/investments/:id/nowGain', authenticateToken, async (r
  * GET /api/users/userId/investments/:id/gain/:date
  * Get the total gain of a investment at a specific date(protected - users can only access their own investments)
  */
-app.get('/api/users/userId/investments/:id/gain/:date', authenticateToken, async (req: AuthRequest, res: Response) => {
+app.get('/api/users/:userId/investments/:id/gain/:date', authenticateToken, async (req: AuthRequest, res: Response) => {
     try{
         const userId = req.params.userId;
         if (!userId || !userId.trim()) {
@@ -1813,11 +1813,11 @@ const data = {
       },
       investments: {
         'POST /api/users/:userId/investments': 'Create a new investment (protected)',
-        'GET /api/users/userId/investments/:id': 'Get a investment by ID (protected)',
+        'GET /api/users/:userId/investments/:id': 'Get a investment by ID (protected)',
         'GET /api/users/:userId/investments': 'Get all investments for a specific user (protected)',
-        'GET /api/users/userId/investments/:id/gain': 'Get the total gain of a investment in the end of months duration',
-        'GET /api/users/userId/investments/:id/nowGain': 'Get gain until now of a investment in the end of months duration',
-        'GET /api/users/userId/investments/:id/gain/:date': 'Get the total gain of a investment at a specific date',
+        'GET /api/users/:userId/investments/:id/gain': 'Get the total gain of a investment in the end of months duration',
+        'GET /api/users/:userId/investments/:id/nowGain': 'Get gain until now of a investment in the end of months duration',
+        'GET /api/users/:userId/investments/:id/gain/:date': 'Get the total gain of a investment at a specific date',
         'PATCH /api/users/:userId/investments/:id/description': 'Update investment description ( Body: {description}) (protected)',
         'PATCH /api/users/:userId/investments/:id/value': 'Update investment value ( Body: {value}) (protected)',
         'PATCH /api/users/:userId/investments/:id/date': 'Update investment date ( Body: {date}) (protected)',
@@ -1848,7 +1848,7 @@ app.get('/', (req: Request, res: Response) => {
 
 // Start the server
 app.listen(PORT, () => {
-  console.log(`🚀 Task List API Server is running on http://localhost:${PORT}`);
+  console.log(`🚀 Financial API Server is running on http://localhost:${PORT}`);
   console.log(`📚 API Documentation available at http://localhost:${PORT}/`);
 });
 
