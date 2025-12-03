@@ -41,11 +41,23 @@ function getTodayISO() {
   return today.toISOString().slice(0, 10);
 }
 
+// --- FUNÇÃO CORRIGIDA ---
 function formatDateDisplay(iso: string) {
   if (!iso) return '';
-  const [yyyy, mm, dd] = iso.split('-');
+  
+  // 1. Proteção: Se já tem barras, assume que já está formatada e retorna direto
+  if (iso.includes('/')) return iso;
+  
+  // 2. Tenta fazer o split pelo padrão ISO (YYYY-MM-DD)
+  const parts = iso.split('-');
+  
+  // 3. Se não tiver as 3 partes (Ano, Mês, Dia), retorna o valor original para evitar "undefined"
+  if (parts.length !== 3) return iso;
+
+  const [yyyy, mm, dd] = parts;
   return `${dd} / ${mm} / ${yyyy}`;
 }
+// ------------------------
 
 // --- Componente: CategorySelect ---
 function CategorySelect({ userId, category, setCategory, type, error }: CategorySelectProps) {
@@ -163,6 +175,7 @@ export function PurchaseForm({ userId, onAddPurchase }: PurchaseFormProps) {
   const [useCurrentDate, setUseCurrentDate] = useState(true);
   const [date, setDate] = useState(getTodayISO());
   const [displayValue, setDisplayValue] = useState(formatDateDisplay(date));
+  const [isLoading, setIsLoading] = useState(false);
 
   const [warning, setWarning] = useState('');
 
@@ -230,7 +243,7 @@ export function PurchaseForm({ userId, onAddPurchase }: PurchaseFormProps) {
         <p className="pf-sub">Preencha os dados abaixo para atualizar seu dashboard.</p>
       </div>
 
-      <fieldset className="pf-type" aria-label="Tipo de movimentação">
+      <fieldset className="pf-type">
         <legend>Tipo</legend>
         <label className={`pf-option ${type === TransactionTypeClass.COST ? 'active' : ''}`}>
           <input

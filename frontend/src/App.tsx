@@ -7,7 +7,7 @@ import Sidebar from './components/Sidebar.tsx';
 import Dividas from './components/Dividas.tsx';
 import Investimentos from './components/Investimentos.tsx';
 import Header from './components/Header.tsx';
-import './global.css'
+import './global.css';
 
 export interface Purchase {
   description: string;
@@ -18,23 +18,63 @@ export interface Purchase {
   date?: string;
 }
 
+interface AuthData {
+  email: string;
+  id: string;
+  token: string;
+  name: string;
+}
+
 type Page = 'overview' | 'mensais' | 'investimentos' | 'dividas';
 
 function App() {
   const [loggedInUser, setLoggedInUser] = useState<string | null>(null);
   const [selectedPage, setSelectedPage] = useState<Page>('overview');
   const [purchases, setPurchases] = useState<Purchase[]>([]);
+  
+  const [userId, setUserId] = useState(''); 
+  const [token, setToken] = useState('');   
+  const [categories, setCategories] = useState<any[]>([]);
+
+  const fetchCategories = async (uid: string, tkn: string) => {
+    try {
+      const response = await fetch(`http://localhost:3001/api/users/${uid}/categories`, {
+        headers: { 'Authorization': `Bearer ${tkn}` }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        const mappedCategories = data.map((c: any) => ({
+          id: c.id,
+          name: c.label
+        }));
+        setCategories(mappedCategories);
+      }
+    } catch (error) {
+      console.error("Erro ao buscar categorias:", error);
+    }
+  };
 
   const addPurchase = (purchase: Purchase) => {
     setPurchases([...purchases, purchase]);
   };
 
-  const handleLogin = (email: string) => {
-    setLoggedInUser(email);
+  const handleCategoryCreated = (newCategory: any) => {
+    setCategories(prev => [...prev, { id: newCategory.id, name: newCategory.label }]);
+  };
+
+  const handleLogin = (data: AuthData) => {
+    setLoggedInUser(data.name); // Salva o nome
+    setUserId(data.id);
+    setToken(data.token);
+    fetchCategories(data.id, data.token);
   };
 
   const handleLogout = () => {
     setLoggedInUser(null);
+    setUserId('');
+    setToken('');
+    setCategories([]);
+    setPurchases([]);
   };
 
   if (!loggedInUser) {
@@ -55,7 +95,13 @@ function App() {
       content = (
         <>
           <h2>Movimentações Mensais</h2>
-          <PurchaseForm onAddPurchase={addPurchase} />
+          <PurchaseForm
+            onAddPurchase={addPurchase}
+            onCategoryCreated={handleCategoryCreated}
+            userId={userId}
+            token={token}
+            categories={categories}
+          />
           <PurchaseList
             purchases={purchases}
             onDelete={(index: number) => {
@@ -77,9 +123,12 @@ function App() {
 
   return (
     <>
-      {/* Cabeçalho aparece sempre que o usuário está logado */}
       <Header onLogout={handleLogout} user={loggedInUser} />
-      <div className="app-container" style={{ paddingTop: 56 }}>
+      
+      {/* REMOVIDO style={{ paddingTop: 56 }} 
+         Agora o CSS global cuida do posicionamento correto 
+      */}
+      <div className="app-container">
         <Sidebar selected={selectedPage} onSelect={setSelectedPage} />
         <main className="app-content">
           {content}

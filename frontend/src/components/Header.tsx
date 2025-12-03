@@ -2,7 +2,7 @@ import React from 'react';
 
 const headerStyle: React.CSSProperties = {
   width: '100%',
-  height: '80px',
+  height: '80px', // DEVE SER 80px para bater com o global.css
   background: '#2c3e50',
   display: 'flex',
   alignItems: 'center',
@@ -13,6 +13,7 @@ const headerStyle: React.CSSProperties = {
   top: 0,
   left: 0,
   zIndex: 1000,
+  boxShadow: '0 2px 5px rgba(0,0,0,0.1)'
 };
 
 const iconStyle: React.CSSProperties = {
@@ -22,13 +23,14 @@ const iconStyle: React.CSSProperties = {
 };
 
 const buttonStyle: React.CSSProperties = {
-  background: '#fff',
-  color: '#2c3e50',
-  border: 'none',
+  background: 'transparent',
+  color: '#ecf0f1',
+  border: '1px solid rgba(255,255,255,0.3)',
   borderRadius: '4px',
   padding: '8px 16px',
   cursor: 'pointer',
   fontWeight: 600,
+  transition: 'all 0.2s'
 };
 
 interface HeaderProps {
@@ -46,10 +48,17 @@ function Header({ onLogout, user }: HeaderProps) {
       <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
         {user && (
           <span style={{ color: '#ecf0f1', fontSize: '16px', fontWeight: 500 }}>
-            Olá, {user.split('@')[0]}
+            Olá, {user}
           </span>
         )}
-        <button style={buttonStyle} onClick={onLogout}>Logout</button>
+        <button 
+          style={buttonStyle} 
+          onClick={onLogout}
+          onMouseOver={(e) => e.currentTarget.style.borderColor = '#fff'}
+          onMouseOut={(e) => e.currentTarget.style.borderColor = 'rgba(255,255,255,0.3)'}
+        >
+          Sair
+        </button>
       </div>
     </header>
   );

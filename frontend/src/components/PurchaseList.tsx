@@ -1,29 +1,56 @@
 import React from 'react';
-import { Purchase } from '../App';
 
-// Helper to format date as DD / MM / AAAA
-export function formatDateDisplay(iso?: string) {
-  if (!iso) return '';
-  const [yyyy, mm, dd] = iso.split('-');
-  return `${dd} / ${mm} / ${yyyy}`;
+// Interface local para garantir que não dependa de importações quebradas
+interface Purchase {
+  description: string;
+  amount: string;
+  category: string;
+  isRecurring: boolean;
+  type: 'gasto' | 'ganho';
+  date?: string;
 }
 
+// --- FUNÇÃO DE DATA CORRIGIDA E BLINDADA ---
+// Funciona tanto para datas "01/12/2025" quanto "2025-12-01"
+export function formatDateDisplay(dateString?: string) {
+  if (!dateString) return '';
 
+  // 1. Se já tem barras, retorna direto (veio do formulário)
+  if (dateString.includes('/')) return dateString;
+
+  // 2. Se tem traços, converte do formato banco de dados
+  if (dateString.includes('-')) {
+    try {
+        const dateObj = new Date(dateString);
+        if (isNaN(dateObj.getTime())) return dateString;
+        
+        // Usa UTC para evitar problemas de fuso horário voltando 1 dia
+        const day = String(dateObj.getUTCDate()).padStart(2, '0');
+        const month = String(dateObj.getUTCMonth() + 1).padStart(2, '0');
+        const year = dateObj.getUTCFullYear();
+        return `${day} / ${month} / ${year}`;
+    } catch (e) {
+        return dateString;
+    }
+  }
+  return dateString;
+}
 
 interface PurchaseListProps {
   purchases: Purchase[];
   onDelete?: (index: number) => void;
 }
 
-const PurchaseList: React.FC<PurchaseListProps> = ({ purchases, onDelete }: PurchaseListProps) => {
+// Adicionado 'purchases = []' para evitar erro se a lista vier vazia
+const PurchaseList: React.FC<PurchaseListProps> = ({ purchases = [], onDelete }) => {
   return (
     <div>
       <h2>Histórico</h2>
-      {purchases.length === 0 ? (
+      {!purchases || purchases.length === 0 ? (
         <p>Nenhuma movimentação registrada.</p>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-          {purchases.map((p: Purchase, index: number) => (
+          {purchases.map((p, index) => (
             <div
               key={index}
               style={{
@@ -47,7 +74,7 @@ const PurchaseList: React.FC<PurchaseListProps> = ({ purchases, onDelete }: Purc
                 R${parseFloat(p.amount).toFixed(2)}
               </div>
 
-              {/* Recorrente Symbol */}
+              {/* Símbolo de Recorrente */}
               <div style={{
                 display: 'flex',
                 alignItems: 'center',
@@ -66,7 +93,7 @@ const PurchaseList: React.FC<PurchaseListProps> = ({ purchases, onDelete }: Purc
                 {p.description}
               </div>
 
-              {/* Data */}
+              {/* Data (Usando a função corrigida) */}
               <div style={{ flexBasis: '120px', fontStyle: 'italic', color: '#555', textAlign: 'left' }}>
                 {formatDateDisplay(p.date)}
               </div>
@@ -76,7 +103,7 @@ const PurchaseList: React.FC<PurchaseListProps> = ({ purchases, onDelete }: Purc
                 {p.category}
               </div>
 
-              {/* Delete Button */}
+              {/* Botão de Excluir */}
               <button
                 onClick={() => onDelete && onDelete(index)}
                 style={{
@@ -94,8 +121,9 @@ const PurchaseList: React.FC<PurchaseListProps> = ({ purchases, onDelete }: Purc
                 title="Excluir"
                 aria-label="Excluir compra"
                 type="button"
-                onMouseOver={e => (e.currentTarget.style.background = 'rgba(231,76,60,0.08)')}
-                onMouseOut={e => (e.currentTarget.style.background = 'none')}
+                // Correção de tipagem para o evento de mouse
+                onMouseOver={(e: any) => (e.currentTarget.style.background = 'rgba(231,76,60,0.08)')}
+                onMouseOut={(e: any) => (e.currentTarget.style.background = 'none')}
               >
                 &#10005;
               </button>

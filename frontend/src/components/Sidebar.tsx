@@ -33,7 +33,6 @@ function Sidebar({ selected, onSelect }) {
           display: flex;
           flex-direction: column;
           align-items: center;
-          padding-top: 24px;
           box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
         }
         .sidebar-item {
