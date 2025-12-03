@@ -38,7 +38,7 @@ function App() {
 
   const fetchCategories = async (uid: string, tkn: string) => {
     try {
-      const response = await fetch(`http://localhost:3001/api/users/${uid}/categories`, {
+      const response = await fetch(`http://localhost:5000/api/users/${uid}/categories`, {
         headers: { 'Authorization': `Bearer ${tkn}` }
       });
       if (response.ok) {
