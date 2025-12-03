@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
 interface Investimento {
@@ -14,14 +14,62 @@ interface Investimento {
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
 
 const Investimentos: React.FC = () => {
+  // Estado da lista de ativos
   const [ativos, setAtivos] = useState<Investimento[]>([]);
 
+  // Estados do formulário (GARANTIA QUE setNovaTaxa ESTÁ AQUI)
   const [novoNome, setNovoNome] = useState('');
   const [novoValor, setNovoValor] = useState('');
   const [novoPrazo, setNovoPrazo] = useState('');     // Meses
   const [novaTaxa, setNovaTaxa] = useState('');       // % a.a.
   const [novoTipo, setNovoTipo] = useState('Pós-fixado');
 
+  // Recupera credenciais do usuário
+  const userId = localStorage.getItem('userId');
+  const token = localStorage.getItem('authToken');
+
+  // 1. CARREGAR INVESTIMENTOS DO SERVIDOR AO INICIAR
+  useEffect(() => {
+    if (userId && token) {
+      fetch(`http://localhost:5000/api/users/${userId}/investments`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+      .then(res => {
+        if (!res.ok) throw new Error("Falha ao buscar investimentos");
+        return res.json();
+      })
+      .then((data: any[]) => {
+        // Mapeia os dados que vêm do backend para o formato da tela
+        const ativosCarregados: Investimento[] = data.map(item => {
+          // O backend salva a taxa mensal (rate). Convertemos para anual para exibir na tabela.
+          // Fórmula: ((1 + i_mensal)^12 - 1) * 100
+          const taxaAnualCalculada = (Math.pow(1 + item.rate, 12) - 1) * 100;
+          
+          // Cálculo do valor final estimado (Juros compostos)
+          const valorFinal = item.value * Math.pow(1 + item.rate, item.monthsDuration);
+
+          // Tentamos recuperar o "Tipo" da descrição (ex: "Tesouro Selic | Pós-fixado")
+          const [nomeReal, tipoSalvo] = (item.description || "").split(" | ");
+
+          return {
+            id: item.id,
+            nome: nomeReal || item.description || "Investimento",
+            tipo: tipoSalvo || "Renda Fixa",
+            valor: item.value,
+            prazoMeses: item.monthsDuration,
+            taxaAnual: parseFloat(taxaAnualCalculada.toFixed(2)),
+            valorFinalEstimado: valorFinal
+          };
+        });
+        setAtivos(ativosCarregados);
+      })
+      .catch(err => console.error("Erro ao carregar:", err));
+    }
+  }, [userId, token]);
+
+  // Cálculo da estimativa em tempo real para o formulário
   const estimativaAtual = useMemo(() => {
     const P = parseFloat(novoValor) || 0;
     const i_anual = parseFloat(novaTaxa) || 0; 
@@ -29,7 +77,7 @@ const Investimentos: React.FC = () => {
 
     if (P === 0 || t_meses === 0) return 0;
 
-    // Fórmula: (1 + taxa_anual)^(1/12) - 1
+    // Converte taxa anual para mensal: (1 + taxa_anual)^(1/12) - 1
     const i_mensal = Math.pow(1 + (i_anual / 100), 1 / 12) - 1;
 
     // Fórmula Juros Compostos: M = P * (1 + i)^t
@@ -37,29 +85,71 @@ const Investimentos: React.FC = () => {
     
     return Montante;
   }, [novoValor, novoPrazo, novaTaxa]);
-  const handleAdicionar = (e: React.FormEvent) => {
+
+  // 2. SALVAR NOVO INVESTIMENTO NO SERVIDOR
+  const handleAdicionar = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!novoNome || !novoValor || !novoPrazo || !novaTaxa) return;
 
-    const valorFinal = estimativaAtual;
+    if (!userId || !token) {
+      alert("Erro: Usuário não autenticado.");
+      return;
+    }
 
-    const novo: Investimento = {
-      id: Math.random(),
-      nome: novoNome,
-      valor: parseFloat(novoValor),
-      prazoMeses: parseFloat(novoPrazo),
-      taxaAnual: parseFloat(novaTaxa),
-      tipo: novoTipo,
-      valorFinalEstimado: valorFinal
+    // Prepara os dados para o formato do Backend
+    const i_anual = parseFloat(novaTaxa);
+    // Backend precisa da taxa mensal para calcular o ganho corretamente
+    const i_mensal = Math.pow(1 + (i_anual / 100), 1 / 12) - 1;
+
+    const payload = {
+      description: `${novoNome} | ${novoTipo}`, // Guardamos o tipo junto com o nome
+      value: parseFloat(novoValor),
+      date: new Date().toISOString(),
+      recurrence: false,
+      rate: i_mensal,             // Envia a taxa mensal
+      recurrenceAdd: 0,
+      monthsDuration: parseFloat(novoPrazo)
     };
 
-    setAtivos([...ativos, novo]);
-    
-    // Limpar campos
-    setNovoNome('');
-    setNovoValor('');
-    setNovoPrazo('');
-    setNovaTaxa('');
+    try {
+      const response = await fetch(`http://localhost:5000/api/users/${userId}/investments`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(payload)
+      });
+
+      if (response.ok) {
+        const itemSalvo = await response.json();
+
+        // Atualiza a lista local com o item retornado pelo servidor
+        const novoAtivoFrontend: Investimento = {
+          id: itemSalvo.id,
+          nome: novoNome,
+          tipo: novoTipo,
+          valor: parseFloat(novoValor),
+          prazoMeses: parseFloat(novoPrazo),
+          taxaAnual: parseFloat(novaTaxa),
+          valorFinalEstimado: estimativaAtual
+        };
+
+        setAtivos([...ativos, novoAtivoFrontend]);
+        
+        // Limpar campos
+        setNovoNome('');
+        setNovoValor('');
+        setNovoPrazo('');
+        setNovaTaxa('');
+      } else {
+        const err = await response.json();
+        alert(`Erro ao salvar: ${err.error || 'Erro desconhecido'}`);
+      }
+    } catch (error) {
+      console.error("Erro de conexão:", error);
+      alert("Erro ao conectar com o servidor.");
+    }
   };
 
   const totalInvestido = ativos.reduce((acc, item) => acc + item.valor, 0);
@@ -91,6 +181,7 @@ const Investimentos: React.FC = () => {
       </div>
 
       <div style={styles.contentGrid}>
+        {/* Gráfico */}
         <div style={styles.chartContainer}>
           <h3 style={{textAlign: 'center'}}>Alocação Atual</h3>
           <div style={{ width: '100%', height: 300 }}>
@@ -116,6 +207,8 @@ const Investimentos: React.FC = () => {
             </ResponsiveContainer>
           </div>
         </div>
+
+        {/* Formulário */}
         <div style={styles.formContainer}>
           <h3>Simulador de Aporte</h3>
           <form onSubmit={handleAdicionar} style={styles.form}>
@@ -123,6 +216,7 @@ const Investimentos: React.FC = () => {
               placeholder="Nome do Ativo" 
               value={novoNome} onChange={e => setNovoNome(e.target.value)} 
               style={styles.input} 
+              required
             />
             
             <div style={{display: 'flex', gap: '10px'}}>
@@ -130,6 +224,7 @@ const Investimentos: React.FC = () => {
                 type="number" placeholder="Valor (R$)" 
                 value={novoValor} onChange={e => setNovoValor(e.target.value)} 
                 style={styles.input} 
+                required
               />
               <select value={novoTipo} onChange={e => setNovoTipo(e.target.value)} style={styles.select}>
                 <option value="Pós-fixado">Pós-fixado</option>
@@ -143,11 +238,14 @@ const Investimentos: React.FC = () => {
                 type="number" placeholder="Prazo (meses)" 
                 value={novoPrazo} onChange={e => setNovoPrazo(e.target.value)} 
                 style={styles.input} 
+                required
               />
+              {/* O erro ocorria aqui. Agora setNovaTaxa está definido no topo do componente */}
               <input 
                 type="number" placeholder="Rentabilidade Anual (%)" 
                 value={novaTaxa} onChange={e => setNovaTaxa(e.target.value)} 
                 style={styles.input} 
+                required
               />
             </div>
 
@@ -168,6 +266,7 @@ const Investimentos: React.FC = () => {
         </div>
       </div>
 
+      {/* Tabela */}
       <div style={styles.listContainer}>
         <h3>Meus Ativos & Projeções</h3>
         <table style={styles.table}>
@@ -201,6 +300,7 @@ const Investimentos: React.FC = () => {
   );
 };
 
+// Estilos CSS-in-JS simples
 const styles = {
   container: { padding: '20px' },
   header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' },
