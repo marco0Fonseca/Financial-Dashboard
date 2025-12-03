@@ -131,6 +131,175 @@
   accent-color: #1abc9c;
 }
 
+/* ===========================
+   CATEGORY SELECT + ADD BUTTON
+=========================== */
+
+.pf-category-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.pf-select {
+  flex: 1;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid #e6e9ef;
+  background: #fff;
+  outline: none;
+  font-size: 0.95rem;
+  transition: box-shadow 0.15s ease, border-color 0.15s ease;
+}
+
+.pf-select:focus {
+  box-shadow: 0 6px 18px rgba(26,188,156,0.18);
+  border-color: #1abc9c;
+}
+
+.pf-add-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: #1abc9c;
+  color: #fff;
+  font-size: 1.4rem;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: transform .15s, box-shadow .15s ease;
+}
+
+.pf-add-btn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 6px 18px rgba(26, 188, 156, 0.18);
+}
+
+/* ===========================
+   MODAL BASE + OVERLAY
+=========================== */
+
+.pf-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 50;
+}
+
+.pf-modal {
+  background: #fff;
+  padding: 22px;
+  border-radius: 14px;
+  width: 360px;
+  max-width: 90%;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.12);
+  animation: modalFade .25s ease;
+}
+
+@keyframes modalFade {
+  from {
+    opacity: 0;
+    transform: translateY(-12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.pf-modal h3 {
+  margin: 0 0 14px 0;
+  font-size: 1.2rem;
+  color: #12222b;
+}
+
+/* input do modal */
+.pf-modal input[type="text"] {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid #e6e9ef;
+  background: #fff;
+  margin-bottom: 14px;
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.pf-modal input:focus {
+  border-color: #1abc9c;
+  box-shadow: 0 6px 18px rgba(26,188,156,.18);
+}
+
+/* botões do modal */
+.pf-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.pf-btn-cancel {
+  padding: 8px 14px;
+  background: transparent;
+  border: 1px solid #d0d4da;
+  border-radius: 8px;
+  cursor: pointer;
+  color: #374151;
+  transition: background .15s;
+}
+
+.pf-btn-cancel:hover {
+  background: #f3f4f6;
+}
+
+.pf-btn-create {
+  padding: 8px 14px;
+  background: #1abc9c;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: box-shadow .15s ease;
+}
+
+.pf-btn-create:hover {
+  box-shadow: 0 6px 18px rgba(26, 188, 156, .20);
+}
+
+.pf-warning {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #ffe6e6;
+  color: #c53030;
+  padding: 6px 10px;
+  font-size: 0.8rem;
+  border-radius: 6px;
+  margin-top: 4px;
+  border: 1px solid #f5c2c2;
+}
+
+.pf-warning-icon {
+  font-weight: bold;
+}
+
+/* Adicione no final do PurchaseForm.css */
+
+.pf-input-error {
+  border-color: #f5c2c2 !important;
+  background-color: #fff5f5;
+}
+
+/* Garante que o grid se comporte bem com o novo layout */
+.pf-category-row {
+  width: 100%;
+}
+
 @media (max-width: 800px) {
   .pf-grid {
     grid-template-columns: 1fr;
